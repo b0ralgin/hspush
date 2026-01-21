@@ -13,7 +13,7 @@ import Database.SQLite.Simple.ToRow
 import Database.SQLite.Simple.Ok (Ok (..))
 import Database.SQLite.Simple.ToField (ToField (..))
 
-data DBError = NotFound | Duplicate 
+data DBError = NotFound | Duplicate deriving Show
 
 type RepoT = ReaderT Connection IO   
 

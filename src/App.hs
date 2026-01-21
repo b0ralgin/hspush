@@ -1,22 +1,22 @@
-module App(runApp) where 
+
+module App(runApp, AppM, AppEnv(..)) where 
 
 import Control.Monad.Reader (ReaderT, runReaderT, liftIO)
 import Database.SQLite.Simple (Connection, open)
 import System.Environment (getEnv)
-
-data AppEnv = AppEnv {
-  dbPool :: Connection 
-}
-
-type AppM = ReaderT AppEnv IO
+import Cases(addDeviceCase)
+import Types
+import MyLogger (mkStdoutLogger)
+import Domain (UserID(UserID), Platform (Andorid), mkDevice)
 
 runApp :: IO()
 runApp = do 
   dbConn <- getEnv "HSPUSH_SQLITE_DB"
   conn <- open dbConn 
-  let env = AppEnv conn 
+  let env = AppEnv conn mkStdoutLogger
   runReaderT app env 
 
 app :: AppM ()
 app = do 
-  liftIO $ putStrLn "Yes"
+  addDeviceCase $ mkDevice (UserID "1") "ab" Andorid
+
