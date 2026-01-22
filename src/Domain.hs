@@ -11,4 +11,4 @@ data  Device = Device
 } deriving (Show) 
 
 mkDevice :: UserID -> String -> Platform -> Device
-mkDevice = Device 
+mkDevice = Device

@@ -1,4 +1,4 @@
-module Cases (addDeviceCase) where 
+module Cases (addDeviceCase, getDeviceCase) where 
 import Domain (UserID, Device)
 import Storage (addDevice, getDevice)
 import Types(AppM, AppEnv(dbPool, logger))
@@ -24,5 +24,4 @@ getDeviceCase userid = do
   liftIO $ logInfo log "get devices by user" [(LogField "user" userid)]
   res <-   withReaderT (const pool) $ getDevice userid
   liftIO $ logInfo log "amount of devices" [(LogField "user" userid), (LogField "amount" $ length res)]
-  return res 
-
+  return res

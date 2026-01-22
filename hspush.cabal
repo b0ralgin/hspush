@@ -28,6 +28,9 @@ library
       App
       Cases
       Domain
+      Gates.Grpc.Proto.Server
+      Gates.Grpc.Proto.Server_Fields
+      Gates.Grpc.Server
       MyLogger
       Storage
       Types
@@ -40,8 +43,13 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , lens >=5.0
     , mtl
+    , proto-lens
+    , proto-lens-runtime
+    , proto-lens-setup
     , sqlite-simple
+    , text
     , time
   default-language: Haskell2010
 
@@ -57,8 +65,13 @@ executable hspush-exe
   build-depends:
       base >=4.7 && <5
     , hspush
+    , lens >=5.0
     , mtl
+    , proto-lens
+    , proto-lens-runtime
+    , proto-lens-setup
     , sqlite-simple
+    , text
     , time
   default-language: Haskell2010
 
@@ -75,7 +88,12 @@ test-suite hspush-test
   build-depends:
       base >=4.7 && <5
     , hspush
+    , lens >=5.0
     , mtl
+    , proto-lens
+    , proto-lens-runtime
+    , proto-lens-setup
     , sqlite-simple
+    , text
     , time
   default-language: Haskell2010

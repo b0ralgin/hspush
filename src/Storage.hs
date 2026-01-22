@@ -44,14 +44,15 @@ addDevice :: Device -> RepoT (Either DBError Device)
 addDevice device = do 
   conn  <- ask 
   let (UserID uid) = userID device
-  _ <- liftIO $ execute conn "INSERT INTO devices (user_id, device_id, platform) VALUES (?, ?, ?) ON CONFLICT DO NOTHING" (DeviceModel uid (deviceID device) (platform device))
+  liftIO $ execute conn "INSERT INTO devices (user_id, device_id, platform) VALUES (?, ?, ?) ON CONFLICT DO NOTHING" (DeviceModel uid (deviceID device) (platform device))
+  -- TODO: add checking, if device already added (to monitor cases)
   return $ Right device 
 
  
-getDevice :: UserID -> RepoT (Either DBError [Device])
+getDevice :: UserID -> RepoT [Device]
 getDevice uid = do
   conn <- ask 
   let (UserID u) = uid
   res <- liftIO (query conn "SELECT user_id, device_id, platform FROM devices WHERE user_id = ?" (Only u) :: IO [DeviceModel])
-  return $ Right $ map (\(DeviceModel uu did p) -> Device (UserID uu) did p) res
+  return $ map (\(DeviceModel uu did p) -> Device (UserID uu) did p) res
 

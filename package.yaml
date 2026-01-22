@@ -24,6 +24,11 @@ dependencies:
 - mtl
 - sqlite-simple
 - time 
+- proto-lens
+- proto-lens-runtime
+- proto-lens-setup
+- lens >= 5.0
+- text
 
 ghc-options:
 - -Wall
