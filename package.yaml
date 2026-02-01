@@ -29,6 +29,14 @@ dependencies:
 - proto-lens-setup
 - lens >= 5.0
 - text
+- bytestring
+- aeson
+- jwt
+- http-conduit
+- base64-bytestring
+- RSA
+- unix-time
+- HsOpenSSL
 
 ghc-options:
 - -Wall

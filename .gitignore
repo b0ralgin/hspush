@@ -2,3 +2,5 @@
 *~
 .vscode/tasks.json
 file.db
+dist-newstyle/
+google_secrets.json
