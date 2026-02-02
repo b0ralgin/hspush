@@ -1,16 +1,16 @@
 module Domain
-    ( Device(..), Platform(..), UserID(..), mkDevice, Task(..)
+    ( Device(..), DevicePlatform(..), UserID(..), mkDevice, Task(..)
     ) where
 
-data  Platform = Ios | Andorid deriving Show 
+data  DevicePlatform = Ios | Andorid deriving Show 
 newtype UserID = UserID String deriving Show 
 data  Device = Device 
     {   userID :: !UserID,
         deviceID :: !String ,
-        platform :: !Platform
+        platform :: !DevicePlatform
 } deriving (Show) 
 
-mkDevice :: UserID -> String -> Platform -> Device
+mkDevice :: UserID -> String -> DevicePlatform -> Device
 mkDevice = Device
 
 data Task = Task {

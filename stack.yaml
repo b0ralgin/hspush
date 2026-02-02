@@ -45,7 +45,13 @@ extra-deps: [
   x509-1.7.7,
   x509-store-1.6.9,
   x509-validation-1.6.12,
-  jwt-0.11.0
+  jwt-0.11.0,
+  grpc-spec-1.0.0,
+  http2-5.3.9,
+  http2-tls-0.4.9,
+  snappy-c-0.1.2,
+  tls-2.1.14,
+  grapesy-1.1.1
 ]
 
 # Override default flag values for project packages and extra-deps

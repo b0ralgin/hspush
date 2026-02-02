@@ -1,15 +1,22 @@
 module App(runApp, AppM, AppEnv(..)) where 
 
-import Control.Monad.Reader (ReaderT, runReaderT, liftIO)
+import Control.Monad.Reader (ReaderT, runReaderT, liftIO, ask)
 import Database.SQLite.Simple (Connection, open)
 import System.Environment (getEnv)
 import Cases(addDeviceCase)
 import Types
 import MyLogger (mkStdoutLogger)
-import Domain (UserID(UserID), Platform (Andorid), mkDevice)
+import Domain (UserID(UserID), DevicePlatform (Andorid), mkDevice)
 import qualified Data.ByteString.Lazy as BL
 import Gates.FCM.Push
 import qualified Data.Text as T
+import Gates.Grpc.Server (methods)
+import Network.GRPC.Common
+import Network.GRPC.Common.Protobuf
+import Network.GRPC.Server.Protobuf
+import Network.GRPC.Server.Run
+import Network.GRPC.Server.StreamType
+import Gates.Grpc.Proto.Server (PushService)
 
 runApp :: IO()
 runApp = do 
@@ -24,6 +31,11 @@ runApp = do
 
 app :: AppM ()
 app = do 
-  result <- sendPush "cVOk2V9KSyuybE_XfqVIy8:APA91bHw3i8LVe5-AC38NmtGXqb6F8pQWaqBrcKPTYXsDgvakYM0bVYideHMapXWpYOzXHefSC47HUsoAw6r5MoUa00ilevkEMJ395KiegITiWINi85GEX4" "test" $ T.pack "test notification"
-  liftIO $ putStrLn $ show result
-  return ()
+  env <- ask
+  liftIO $ runServerWithHandlers def config $ fromMethods (methods env)
+  where
+    config :: ServerConfig
+    config = ServerConfig {
+          serverInsecure = Just (InsecureConfig (Just "0.0.0.0") defaultInsecurePort)
+        , serverSecure   = Nothing
+        }

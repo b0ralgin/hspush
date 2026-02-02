@@ -9,6 +9,7 @@ copyright:           "2026 Author name here"
 extra-source-files:
 - README.md
 - CHANGELOG.md
+- proto/server.proto
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -37,6 +38,8 @@ dependencies:
 - RSA
 - unix-time
 - HsOpenSSL
+- grapesy 
+
 
 ghc-options:
 - -Wall

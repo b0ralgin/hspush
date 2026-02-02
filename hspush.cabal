@@ -18,6 +18,7 @@ build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
+    proto/server.proto
 
 source-repository head
   type: git
@@ -32,6 +33,7 @@ library
       Gates.FCM.Push
       Gates.Grpc.Proto.Server
       Gates.Grpc.Proto.Server_Fields
+      Gates.Grpc.Proto.ServerMeta
       Gates.Grpc.Server
       MyLogger
       Storage
@@ -50,6 +52,7 @@ library
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , grapesy
     , http-conduit
     , jwt
     , lens >=5.0
@@ -79,6 +82,7 @@ executable hspush-exe
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , grapesy
     , hspush
     , http-conduit
     , jwt
@@ -110,6 +114,7 @@ test-suite hspush-test
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , grapesy
     , hspush
     , http-conduit
     , jwt

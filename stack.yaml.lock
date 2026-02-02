@@ -39,6 +39,48 @@ packages:
       size: 1029
   original:
     hackage: jwt-0.11.0
+- completed:
+    hackage: grpc-spec-1.0.0@sha256:08dfa592e474395f31bb04e13fa7615d506f5287ebd97a72400453d72156851c,6723
+    pantry-tree:
+      sha256: 648bc0457653a6edfd45f529dea794e4d75d6256402efa3919d59c17491a2a2f
+      size: 3873
+  original:
+    hackage: grpc-spec-1.0.0
+- completed:
+    hackage: http2-5.3.9@sha256:c69ee7e27a4695ed1e379be094d5c22535b77e82e2571a44d4bc37f22027faf1,10591
+    pantry-tree:
+      sha256: ddbdc7822910205a8de6aff6d23267d0e70327453dafd2ce5c5db3bde519177e
+      size: 44864
+  original:
+    hackage: http2-5.3.9
+- completed:
+    hackage: http2-tls-0.4.9@sha256:95dda35689727a0a2ac21467e2c14f7b2788828d5ec4b6fae0d22afc1c836c5d,2447
+    pantry-tree:
+      sha256: 6fa1a0dcc82c37db414da26881b1619bc196f7d922e44480dc11174b95660ee5
+      size: 894
+  original:
+    hackage: http2-tls-0.4.9
+- completed:
+    hackage: snappy-c-0.1.2@sha256:0eb33f4dfd7814ada66a3bc1251209ddd3beddcfa0f23876728f574ea766cf09,3889
+    pantry-tree:
+      sha256: 7e0a161632b5af4d2cbbe9712277d1e4166125b04cb6e4ed1dd8b2ca718aa8d9
+      size: 1109
+  original:
+    hackage: snappy-c-0.1.2
+- completed:
+    hackage: tls-2.1.14@sha256:b69381df716498c01bcee5db40c3c9fa14eb1c498043cb993a745b7e5d6701a9,7252
+    pantry-tree:
+      sha256: 9a0bfbb4ae7df2a56ab9dc65f3a8066f7363486e0d9a336100de0d465b413d2e
+      size: 7056
+  original:
+    hackage: tls-2.1.14
+- completed:
+    hackage: grapesy-1.1.1@sha256:ac879eec75aee8e78a2d3652fae31e965ae23c194667b61c3434edd642908c53,13505
+    pantry-tree:
+      sha256: 86409da36d50fd9a9eaedd43aa11424b3ce688d45ee6b7e6f3667cf5222d8ec9
+      size: 11516
+  original:
+    hackage: grapesy-1.1.1
 snapshots:
 - completed:
     sha256: c320c36b8a392602c9076bdd0c656e12dcab30f294105a50c3f8ef963c4c3a0d

@@ -2,7 +2,7 @@
 
 module Storage (addDevice,  RepoT, getDevice, processTask, saveTask) where
 
-import Domain(UserID(..), Device(..), Platform(..), Task (Task, taskId), )
+import Domain(UserID(..), Device(..), DevicePlatform(..), Task (Task, taskId), )
 import Control.Monad.Reader (ReaderT, ask)
 import Control.Monad.IO.Class (liftIO)
 import Database.SQLite.Simple (execute, SQLData (SQLText), query, Only (..), Connection, withTransaction, query_, changes, withImmediateTransaction)
@@ -20,7 +20,7 @@ type RepoT = ReaderT Connection IO
 data DeviceModel = DeviceModel {  
    user :: !String,
    device :: !String,
-   plat :: !Platform
+   plat :: !DevicePlatform
 } deriving (Show)
 
 data TaskModel = TaskModel {
@@ -41,12 +41,12 @@ instance FromRow DeviceModel where
 instance ToRow DeviceModel where 
    toRow (DeviceModel { user = uid, device = dev, plat = plat }) = toRow (uid, dev, plat) 
    
-instance ToField Platform where 
+instance ToField DevicePlatform where 
   toField Ios = SQLText "ios"
   toField Andorid = SQLText "android" 
   {-# INLINE toField #-}
 
-instance FromField Platform where
+instance FromField DevicePlatform where
      fromField (Field (SQLText "ios") _) = Ok Ios
      fromField (Field (SQLText "android") _) = Ok Andorid
      fromField f = returnError ConversionFailed f "need a text"
