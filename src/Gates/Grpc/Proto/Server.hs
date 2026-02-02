@@ -6,7 +6,8 @@
 module Gates.Grpc.Proto.Server (
         PushService(..), AddDeviceRequest(), AddDeviceResponse(), Device(),
         GetDevicesRequest(), GetDevicesResponse(), Platform(..),
-        Platform(), Platform'UnrecognizedValue
+        Platform(), Platform'UnrecognizedValue, SendPushRequest(),
+        SendPushResponse()
     ) where
 import qualified Data.ProtoLens.Runtime.Control.DeepSeq as Control.DeepSeq
 import qualified Data.ProtoLens.Runtime.Data.ProtoLens.Prism as Data.ProtoLens.Prism
@@ -866,17 +867,374 @@ instance Data.ProtoLens.FieldDefault Platform where
   fieldDefault = PLATFORM_UNKNOWN
 instance Control.DeepSeq.NFData Platform where
   rnf x__ = Prelude.seq x__ ()
+{- | Fields :
+     
+         * 'Proto.Proto.Server_Fields.userId' @:: Lens' SendPushRequest Data.Text.Text@
+         * 'Proto.Proto.Server_Fields.title' @:: Lens' SendPushRequest Data.Text.Text@
+         * 'Proto.Proto.Server_Fields.body' @:: Lens' SendPushRequest Data.Text.Text@ -}
+data SendPushRequest
+  = SendPushRequest'_constructor {_SendPushRequest'userId :: !Data.Text.Text,
+                                  _SendPushRequest'title :: !Data.Text.Text,
+                                  _SendPushRequest'body :: !Data.Text.Text,
+                                  _SendPushRequest'_unknownFields :: !Data.ProtoLens.FieldSet}
+  deriving stock (Prelude.Eq, Prelude.Ord)
+instance Prelude.Show SendPushRequest where
+  showsPrec _ __x __s
+    = Prelude.showChar
+        '{'
+        (Prelude.showString
+           (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
+instance Data.ProtoLens.Field.HasField SendPushRequest "userId" Data.Text.Text where
+  fieldOf _
+    = (Prelude..)
+        (Lens.Family2.Unchecked.lens
+           _SendPushRequest'userId
+           (\ x__ y__ -> x__ {_SendPushRequest'userId = y__}))
+        Prelude.id
+instance Data.ProtoLens.Field.HasField SendPushRequest "title" Data.Text.Text where
+  fieldOf _
+    = (Prelude..)
+        (Lens.Family2.Unchecked.lens
+           _SendPushRequest'title
+           (\ x__ y__ -> x__ {_SendPushRequest'title = y__}))
+        Prelude.id
+instance Data.ProtoLens.Field.HasField SendPushRequest "body" Data.Text.Text where
+  fieldOf _
+    = (Prelude..)
+        (Lens.Family2.Unchecked.lens
+           _SendPushRequest'body
+           (\ x__ y__ -> x__ {_SendPushRequest'body = y__}))
+        Prelude.id
+instance Data.ProtoLens.Message SendPushRequest where
+  messageName _ = Data.Text.pack "push.SendPushRequest"
+  packedMessageDescriptor _
+    = "\n\
+      \\SISendPushRequest\DC2\ETB\n\
+      \\auser_id\CAN\SOH \SOH(\tR\ACKuserId\DC2\DC4\n\
+      \\ENQtitle\CAN\STX \SOH(\tR\ENQtitle\DC2\DC2\n\
+      \\EOTbody\CAN\ETX \SOH(\tR\EOTbody"
+  packedFileDescriptor _ = packedFileDescriptor
+  fieldsByTag
+    = let
+        userId__field_descriptor
+          = Data.ProtoLens.FieldDescriptor
+              "user_id"
+              (Data.ProtoLens.ScalarField Data.ProtoLens.StringField ::
+                 Data.ProtoLens.FieldTypeDescriptor Data.Text.Text)
+              (Data.ProtoLens.PlainField
+                 Data.ProtoLens.Optional (Data.ProtoLens.Field.field @"userId")) ::
+              Data.ProtoLens.FieldDescriptor SendPushRequest
+        title__field_descriptor
+          = Data.ProtoLens.FieldDescriptor
+              "title"
+              (Data.ProtoLens.ScalarField Data.ProtoLens.StringField ::
+                 Data.ProtoLens.FieldTypeDescriptor Data.Text.Text)
+              (Data.ProtoLens.PlainField
+                 Data.ProtoLens.Optional (Data.ProtoLens.Field.field @"title")) ::
+              Data.ProtoLens.FieldDescriptor SendPushRequest
+        body__field_descriptor
+          = Data.ProtoLens.FieldDescriptor
+              "body"
+              (Data.ProtoLens.ScalarField Data.ProtoLens.StringField ::
+                 Data.ProtoLens.FieldTypeDescriptor Data.Text.Text)
+              (Data.ProtoLens.PlainField
+                 Data.ProtoLens.Optional (Data.ProtoLens.Field.field @"body")) ::
+              Data.ProtoLens.FieldDescriptor SendPushRequest
+      in
+        Data.Map.fromList
+          [(Data.ProtoLens.Tag 1, userId__field_descriptor),
+           (Data.ProtoLens.Tag 2, title__field_descriptor),
+           (Data.ProtoLens.Tag 3, body__field_descriptor)]
+  unknownFields
+    = Lens.Family2.Unchecked.lens
+        _SendPushRequest'_unknownFields
+        (\ x__ y__ -> x__ {_SendPushRequest'_unknownFields = y__})
+  defMessage
+    = SendPushRequest'_constructor
+        {_SendPushRequest'userId = Data.ProtoLens.fieldDefault,
+         _SendPushRequest'title = Data.ProtoLens.fieldDefault,
+         _SendPushRequest'body = Data.ProtoLens.fieldDefault,
+         _SendPushRequest'_unknownFields = []}
+  parseMessage
+    = let
+        loop ::
+          SendPushRequest
+          -> Data.ProtoLens.Encoding.Bytes.Parser SendPushRequest
+        loop x
+          = do end <- Data.ProtoLens.Encoding.Bytes.atEnd
+               if end then
+                   do (let missing = []
+                       in
+                         if Prelude.null missing then
+                             Prelude.return ()
+                         else
+                             Prelude.fail
+                               ((Prelude.++)
+                                  "Missing required fields: "
+                                  (Prelude.show (missing :: [Prelude.String]))))
+                      Prelude.return
+                        (Lens.Family2.over
+                           Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
+               else
+                   do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                      case tag of
+                        10
+                          -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
+                                       "user_id"
+                                loop (Lens.Family2.set (Data.ProtoLens.Field.field @"userId") y x)
+                        18
+                          -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
+                                       "title"
+                                loop (Lens.Family2.set (Data.ProtoLens.Field.field @"title") y x)
+                        26
+                          -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
+                                       "body"
+                                loop (Lens.Family2.set (Data.ProtoLens.Field.field @"body") y x)
+                        wire
+                          -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
+                                        wire
+                                loop
+                                  (Lens.Family2.over
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
+      in
+        (Data.ProtoLens.Encoding.Bytes.<?>)
+          (do loop Data.ProtoLens.defMessage) "SendPushRequest"
+  buildMessage
+    = \ _x
+        -> (Data.Monoid.<>)
+             (let
+                _v = Lens.Family2.view (Data.ProtoLens.Field.field @"userId") _x
+              in
+                if (Prelude.==) _v Data.ProtoLens.fieldDefault then
+                    Data.Monoid.mempty
+                else
+                    (Data.Monoid.<>)
+                      (Data.ProtoLens.Encoding.Bytes.putVarInt 10)
+                      ((Prelude..)
+                         (\ bs
+                            -> (Data.Monoid.<>)
+                                 (Data.ProtoLens.Encoding.Bytes.putVarInt
+                                    (Prelude.fromIntegral (Data.ByteString.length bs)))
+                                 (Data.ProtoLens.Encoding.Bytes.putBytes bs))
+                         Data.Text.Encoding.encodeUtf8 _v))
+             ((Data.Monoid.<>)
+                (let
+                   _v = Lens.Family2.view (Data.ProtoLens.Field.field @"title") _x
+                 in
+                   if (Prelude.==) _v Data.ProtoLens.fieldDefault then
+                       Data.Monoid.mempty
+                   else
+                       (Data.Monoid.<>)
+                         (Data.ProtoLens.Encoding.Bytes.putVarInt 18)
+                         ((Prelude..)
+                            (\ bs
+                               -> (Data.Monoid.<>)
+                                    (Data.ProtoLens.Encoding.Bytes.putVarInt
+                                       (Prelude.fromIntegral (Data.ByteString.length bs)))
+                                    (Data.ProtoLens.Encoding.Bytes.putBytes bs))
+                            Data.Text.Encoding.encodeUtf8 _v))
+                ((Data.Monoid.<>)
+                   (let _v = Lens.Family2.view (Data.ProtoLens.Field.field @"body") _x
+                    in
+                      if (Prelude.==) _v Data.ProtoLens.fieldDefault then
+                          Data.Monoid.mempty
+                      else
+                          (Data.Monoid.<>)
+                            (Data.ProtoLens.Encoding.Bytes.putVarInt 26)
+                            ((Prelude..)
+                               (\ bs
+                                  -> (Data.Monoid.<>)
+                                       (Data.ProtoLens.Encoding.Bytes.putVarInt
+                                          (Prelude.fromIntegral (Data.ByteString.length bs)))
+                                       (Data.ProtoLens.Encoding.Bytes.putBytes bs))
+                               Data.Text.Encoding.encodeUtf8 _v))
+                   (Data.ProtoLens.Encoding.Wire.buildFieldSet
+                      (Lens.Family2.view Data.ProtoLens.unknownFields _x))))
+instance Control.DeepSeq.NFData SendPushRequest where
+  rnf
+    = \ x__
+        -> Control.DeepSeq.deepseq
+             (_SendPushRequest'_unknownFields x__)
+             (Control.DeepSeq.deepseq
+                (_SendPushRequest'userId x__)
+                (Control.DeepSeq.deepseq
+                   (_SendPushRequest'title x__)
+                   (Control.DeepSeq.deepseq (_SendPushRequest'body x__) ())))
+{- | Fields :
+     
+         * 'Proto.Proto.Server_Fields.success' @:: Lens' SendPushResponse Prelude.Bool@
+         * 'Proto.Proto.Server_Fields.error' @:: Lens' SendPushResponse Data.Text.Text@ -}
+data SendPushResponse
+  = SendPushResponse'_constructor {_SendPushResponse'success :: !Prelude.Bool,
+                                   _SendPushResponse'error :: !Data.Text.Text,
+                                   _SendPushResponse'_unknownFields :: !Data.ProtoLens.FieldSet}
+  deriving stock (Prelude.Eq, Prelude.Ord)
+instance Prelude.Show SendPushResponse where
+  showsPrec _ __x __s
+    = Prelude.showChar
+        '{'
+        (Prelude.showString
+           (Data.ProtoLens.showMessageShort __x) (Prelude.showChar '}' __s))
+instance Data.ProtoLens.Field.HasField SendPushResponse "success" Prelude.Bool where
+  fieldOf _
+    = (Prelude..)
+        (Lens.Family2.Unchecked.lens
+           _SendPushResponse'success
+           (\ x__ y__ -> x__ {_SendPushResponse'success = y__}))
+        Prelude.id
+instance Data.ProtoLens.Field.HasField SendPushResponse "error" Data.Text.Text where
+  fieldOf _
+    = (Prelude..)
+        (Lens.Family2.Unchecked.lens
+           _SendPushResponse'error
+           (\ x__ y__ -> x__ {_SendPushResponse'error = y__}))
+        Prelude.id
+instance Data.ProtoLens.Message SendPushResponse where
+  messageName _ = Data.Text.pack "push.SendPushResponse"
+  packedMessageDescriptor _
+    = "\n\
+      \\DLESendPushResponse\DC2\CAN\n\
+      \\asuccess\CAN\SOH \SOH(\bR\asuccess\DC2\DC4\n\
+      \\ENQerror\CAN\STX \SOH(\tR\ENQerror"
+  packedFileDescriptor _ = packedFileDescriptor
+  fieldsByTag
+    = let
+        success__field_descriptor
+          = Data.ProtoLens.FieldDescriptor
+              "success"
+              (Data.ProtoLens.ScalarField Data.ProtoLens.BoolField ::
+                 Data.ProtoLens.FieldTypeDescriptor Prelude.Bool)
+              (Data.ProtoLens.PlainField
+                 Data.ProtoLens.Optional (Data.ProtoLens.Field.field @"success")) ::
+              Data.ProtoLens.FieldDescriptor SendPushResponse
+        error__field_descriptor
+          = Data.ProtoLens.FieldDescriptor
+              "error"
+              (Data.ProtoLens.ScalarField Data.ProtoLens.StringField ::
+                 Data.ProtoLens.FieldTypeDescriptor Data.Text.Text)
+              (Data.ProtoLens.PlainField
+                 Data.ProtoLens.Optional (Data.ProtoLens.Field.field @"error")) ::
+              Data.ProtoLens.FieldDescriptor SendPushResponse
+      in
+        Data.Map.fromList
+          [(Data.ProtoLens.Tag 1, success__field_descriptor),
+           (Data.ProtoLens.Tag 2, error__field_descriptor)]
+  unknownFields
+    = Lens.Family2.Unchecked.lens
+        _SendPushResponse'_unknownFields
+        (\ x__ y__ -> x__ {_SendPushResponse'_unknownFields = y__})
+  defMessage
+    = SendPushResponse'_constructor
+        {_SendPushResponse'success = Data.ProtoLens.fieldDefault,
+         _SendPushResponse'error = Data.ProtoLens.fieldDefault,
+         _SendPushResponse'_unknownFields = []}
+  parseMessage
+    = let
+        loop ::
+          SendPushResponse
+          -> Data.ProtoLens.Encoding.Bytes.Parser SendPushResponse
+        loop x
+          = do end <- Data.ProtoLens.Encoding.Bytes.atEnd
+               if end then
+                   do (let missing = []
+                       in
+                         if Prelude.null missing then
+                             Prelude.return ()
+                         else
+                             Prelude.fail
+                               ((Prelude.++)
+                                  "Missing required fields: "
+                                  (Prelude.show (missing :: [Prelude.String]))))
+                      Prelude.return
+                        (Lens.Family2.over
+                           Data.ProtoLens.unknownFields (\ !t -> Prelude.reverse t) x)
+               else
+                   do tag <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                      case tag of
+                        8 -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
+                                       (Prelude.fmap
+                                          ((Prelude./=) 0) Data.ProtoLens.Encoding.Bytes.getVarInt)
+                                       "success"
+                                loop (Lens.Family2.set (Data.ProtoLens.Field.field @"success") y x)
+                        18
+                          -> do y <- (Data.ProtoLens.Encoding.Bytes.<?>)
+                                       (do len <- Data.ProtoLens.Encoding.Bytes.getVarInt
+                                           Data.ProtoLens.Encoding.Bytes.getText
+                                             (Prelude.fromIntegral len))
+                                       "error"
+                                loop (Lens.Family2.set (Data.ProtoLens.Field.field @"error") y x)
+                        wire
+                          -> do !y <- Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire
+                                        wire
+                                loop
+                                  (Lens.Family2.over
+                                     Data.ProtoLens.unknownFields (\ !t -> (:) y t) x)
+      in
+        (Data.ProtoLens.Encoding.Bytes.<?>)
+          (do loop Data.ProtoLens.defMessage) "SendPushResponse"
+  buildMessage
+    = \ _x
+        -> (Data.Monoid.<>)
+             (let
+                _v = Lens.Family2.view (Data.ProtoLens.Field.field @"success") _x
+              in
+                if (Prelude.==) _v Data.ProtoLens.fieldDefault then
+                    Data.Monoid.mempty
+                else
+                    (Data.Monoid.<>)
+                      (Data.ProtoLens.Encoding.Bytes.putVarInt 8)
+                      ((Prelude..)
+                         Data.ProtoLens.Encoding.Bytes.putVarInt (\ b -> if b then 1 else 0)
+                         _v))
+             ((Data.Monoid.<>)
+                (let
+                   _v = Lens.Family2.view (Data.ProtoLens.Field.field @"error") _x
+                 in
+                   if (Prelude.==) _v Data.ProtoLens.fieldDefault then
+                       Data.Monoid.mempty
+                   else
+                       (Data.Monoid.<>)
+                         (Data.ProtoLens.Encoding.Bytes.putVarInt 18)
+                         ((Prelude..)
+                            (\ bs
+                               -> (Data.Monoid.<>)
+                                    (Data.ProtoLens.Encoding.Bytes.putVarInt
+                                       (Prelude.fromIntegral (Data.ByteString.length bs)))
+                                    (Data.ProtoLens.Encoding.Bytes.putBytes bs))
+                            Data.Text.Encoding.encodeUtf8 _v))
+                (Data.ProtoLens.Encoding.Wire.buildFieldSet
+                   (Lens.Family2.view Data.ProtoLens.unknownFields _x)))
+instance Control.DeepSeq.NFData SendPushResponse where
+  rnf
+    = \ x__
+        -> Control.DeepSeq.deepseq
+             (_SendPushResponse'_unknownFields x__)
+             (Control.DeepSeq.deepseq
+                (_SendPushResponse'success x__)
+                (Control.DeepSeq.deepseq (_SendPushResponse'error x__) ()))
 data PushService = PushService {}
 instance Data.ProtoLens.Service.Types.Service PushService where
   type ServiceName PushService = "PushService"
   type ServicePackage PushService = "push"
-  type ServiceMethods PushService = '["addDevice", "getDevices"]
+  type ServiceMethods PushService = '["addDevice",
+                                      "getDevices",
+                                      "sendPush"]
   packedServiceDescriptor _
     = "\n\
       \\vPushService\DC2<\n\
       \\tAddDevice\DC2\SYN.push.AddDeviceRequest\SUB\ETB.push.AddDeviceResponse\DC2?\n\
       \\n\
-      \GetDevices\DC2\ETB.push.GetDevicesRequest\SUB\CAN.push.GetDevicesResponse"
+      \GetDevices\DC2\ETB.push.GetDevicesRequest\SUB\CAN.push.GetDevicesResponse\DC29\n\
+      \\bSendPush\DC2\NAK.push.SendPushRequest\SUB\SYN.push.SendPushResponse"
 instance Data.ProtoLens.Service.Types.HasMethodImpl PushService "addDevice" where
   type MethodName PushService "addDevice" = "AddDevice"
   type MethodInput PushService "addDevice" = AddDeviceRequest
@@ -887,6 +1245,11 @@ instance Data.ProtoLens.Service.Types.HasMethodImpl PushService "getDevices" whe
   type MethodInput PushService "getDevices" = GetDevicesRequest
   type MethodOutput PushService "getDevices" = GetDevicesResponse
   type MethodStreamingType PushService "getDevices" = 'Data.ProtoLens.Service.Types.NonStreaming
+instance Data.ProtoLens.Service.Types.HasMethodImpl PushService "sendPush" where
+  type MethodName PushService "sendPush" = "SendPush"
+  type MethodInput PushService "sendPush" = SendPushRequest
+  type MethodOutput PushService "sendPush" = SendPushResponse
+  type MethodStreamingType PushService "sendPush" = 'Data.ProtoLens.Service.Types.NonStreaming
 packedFileDescriptor :: Data.ByteString.ByteString
 packedFileDescriptor
   = "\n\
@@ -904,17 +1267,26 @@ packedFileDescriptor
     \\tdevice_id\CAN\SOH \SOH(\tR\bdeviceId\DC2*\n\
     \\bplatform\CAN\STX \SOH(\SO2\SO.push.PlatformR\bplatform\"<\n\
     \\DC2GetDevicesResponse\DC2&\n\
-    \\adevices\CAN\SOH \ETX(\v2\f.push.DeviceR\adevices*Z\n\
+    \\adevices\CAN\SOH \ETX(\v2\f.push.DeviceR\adevices\"T\n\
+    \\SISendPushRequest\DC2\ETB\n\
+    \\auser_id\CAN\SOH \SOH(\tR\ACKuserId\DC2\DC4\n\
+    \\ENQtitle\CAN\STX \SOH(\tR\ENQtitle\DC2\DC2\n\
+    \\EOTbody\CAN\ETX \SOH(\tR\EOTbody\"B\n\
+    \\DLESendPushResponse\DC2\CAN\n\
+    \\asuccess\CAN\SOH \SOH(\bR\asuccess\DC2\DC4\n\
+    \\ENQerror\CAN\STX \SOH(\tR\ENQerror*Z\n\
     \\bPlatform\DC2\DC4\n\
     \\DLEPLATFORM_UNKNOWN\DLE\NUL\DC2\DC4\n\
     \\DLEPLATFORM_ANDROID\DLE\SOH\DC2\DLE\n\
     \\fPLATFORM_IOS\DLE\STX\DC2\DLE\n\
-    \\fPLATFORM_WEB\DLE\ETX2\140\SOH\n\
+    \\fPLATFORM_WEB\DLE\ETX2\199\SOH\n\
     \\vPushService\DC2<\n\
     \\tAddDevice\DC2\SYN.push.AddDeviceRequest\SUB\ETB.push.AddDeviceResponse\DC2?\n\
     \\n\
-    \GetDevices\DC2\ETB.push.GetDevicesRequest\SUB\CAN.push.GetDevicesResponseB\tZ\apush/v1J\232\a\n\
-    \\ACK\DC2\EOT\NUL\NUL)\SOH\n\
+    \GetDevices\DC2\ETB.push.GetDevicesRequest\SUB\CAN.push.GetDevicesResponse\DC29\n\
+    \\bSendPush\DC2\NAK.push.SendPushRequest\SUB\SYN.push.SendPushResponseB\tZ\apush/v1J\226\n\
+    \\n\
+    \\ACK\DC2\EOT\NUL\NUL6\SOH\n\
     \\b\n\
     \\SOH\f\DC2\ETX\NUL\NUL\DC2\n\
     \\b\n\
@@ -1065,23 +1437,83 @@ packedFileDescriptor
     \\ENQ\EOT\EOT\STX\NUL\ETX\DC2\ETX#\FS\GS\n\
     \\n\
     \\n\
-    \\STX\ACK\NUL\DC2\EOT&\NUL)\SOH\n\
+    \\STX\EOT\ENQ\DC2\EOT&\NUL*\SOH\n\
     \\n\
     \\n\
-    \\ETX\ACK\NUL\SOH\DC2\ETX&\b\DC3\n\
+    \\ETX\EOT\ENQ\SOH\DC2\ETX&\b\ETB\n\
     \\v\n\
-    \\EOT\ACK\NUL\STX\NUL\DC2\ETX'\STX>\n\
+    \\EOT\EOT\ENQ\STX\NUL\DC2\ETX'\STX\NAK\n\
     \\f\n\
-    \\ENQ\ACK\NUL\STX\NUL\SOH\DC2\ETX'\ACK\SI\n\
+    \\ENQ\EOT\ENQ\STX\NUL\ENQ\DC2\ETX'\STX\b\n\
     \\f\n\
-    \\ENQ\ACK\NUL\STX\NUL\STX\DC2\ETX'\DLE \n\
+    \\ENQ\EOT\ENQ\STX\NUL\SOH\DC2\ETX'\t\DLE\n\
     \\f\n\
-    \\ENQ\ACK\NUL\STX\NUL\ETX\DC2\ETX'+<\n\
+    \\ENQ\EOT\ENQ\STX\NUL\ETX\DC2\ETX'\DC3\DC4\n\
     \\v\n\
-    \\EOT\ACK\NUL\STX\SOH\DC2\ETX(\STXA\n\
+    \\EOT\EOT\ENQ\STX\SOH\DC2\ETX(\STX\DC3\n\
     \\f\n\
-    \\ENQ\ACK\NUL\STX\SOH\SOH\DC2\ETX(\ACK\DLE\n\
+    \\ENQ\EOT\ENQ\STX\SOH\ENQ\DC2\ETX(\STX\b\n\
     \\f\n\
-    \\ENQ\ACK\NUL\STX\SOH\STX\DC2\ETX(\DC1\"\n\
+    \\ENQ\EOT\ENQ\STX\SOH\SOH\DC2\ETX(\t\SO\n\
     \\f\n\
-    \\ENQ\ACK\NUL\STX\SOH\ETX\DC2\ETX(-?b\ACKproto3"
+    \\ENQ\EOT\ENQ\STX\SOH\ETX\DC2\ETX(\DC1\DC2\n\
+    \\v\n\
+    \\EOT\EOT\ENQ\STX\STX\DC2\ETX)\STX\DC2\n\
+    \\f\n\
+    \\ENQ\EOT\ENQ\STX\STX\ENQ\DC2\ETX)\STX\b\n\
+    \\f\n\
+    \\ENQ\EOT\ENQ\STX\STX\SOH\DC2\ETX)\t\r\n\
+    \\f\n\
+    \\ENQ\EOT\ENQ\STX\STX\ETX\DC2\ETX)\DLE\DC1\n\
+    \\n\
+    \\n\
+    \\STX\EOT\ACK\DC2\EOT-\NUL0\SOH\n\
+    \\n\
+    \\n\
+    \\ETX\EOT\ACK\SOH\DC2\ETX-\b\CAN\n\
+    \\v\n\
+    \\EOT\EOT\ACK\STX\NUL\DC2\ETX.\STX\DC3\n\
+    \\f\n\
+    \\ENQ\EOT\ACK\STX\NUL\ENQ\DC2\ETX.\STX\ACK\n\
+    \\f\n\
+    \\ENQ\EOT\ACK\STX\NUL\SOH\DC2\ETX.\a\SO\n\
+    \\f\n\
+    \\ENQ\EOT\ACK\STX\NUL\ETX\DC2\ETX.\DC1\DC2\n\
+    \\v\n\
+    \\EOT\EOT\ACK\STX\SOH\DC2\ETX/\STX\DC3\n\
+    \\f\n\
+    \\ENQ\EOT\ACK\STX\SOH\ENQ\DC2\ETX/\STX\b\n\
+    \\f\n\
+    \\ENQ\EOT\ACK\STX\SOH\SOH\DC2\ETX/\t\SO\n\
+    \\f\n\
+    \\ENQ\EOT\ACK\STX\SOH\ETX\DC2\ETX/\DC1\DC2\n\
+    \\n\
+    \\n\
+    \\STX\ACK\NUL\DC2\EOT2\NUL6\SOH\n\
+    \\n\
+    \\n\
+    \\ETX\ACK\NUL\SOH\DC2\ETX2\b\DC3\n\
+    \\v\n\
+    \\EOT\ACK\NUL\STX\NUL\DC2\ETX3\STX>\n\
+    \\f\n\
+    \\ENQ\ACK\NUL\STX\NUL\SOH\DC2\ETX3\ACK\SI\n\
+    \\f\n\
+    \\ENQ\ACK\NUL\STX\NUL\STX\DC2\ETX3\DLE \n\
+    \\f\n\
+    \\ENQ\ACK\NUL\STX\NUL\ETX\DC2\ETX3+<\n\
+    \\v\n\
+    \\EOT\ACK\NUL\STX\SOH\DC2\ETX4\STXA\n\
+    \\f\n\
+    \\ENQ\ACK\NUL\STX\SOH\SOH\DC2\ETX4\ACK\DLE\n\
+    \\f\n\
+    \\ENQ\ACK\NUL\STX\SOH\STX\DC2\ETX4\DC1\"\n\
+    \\f\n\
+    \\ENQ\ACK\NUL\STX\SOH\ETX\DC2\ETX4-?\n\
+    \\v\n\
+    \\EOT\ACK\NUL\STX\STX\DC2\ETX5\STX;\n\
+    \\f\n\
+    \\ENQ\ACK\NUL\STX\STX\SOH\DC2\ETX5\ACK\SO\n\
+    \\f\n\
+    \\ENQ\ACK\NUL\STX\STX\STX\DC2\ETX5\SI\RS\n\
+    \\f\n\
+    \\ENQ\ACK\NUL\STX\STX\ETX\DC2\ETX5)9b\ACKproto3"

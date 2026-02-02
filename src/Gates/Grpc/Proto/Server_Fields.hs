@@ -27,6 +27,11 @@ import qualified Data.ProtoLens.Runtime.Data.Vector as Data.Vector
 import qualified Data.ProtoLens.Runtime.Data.Vector.Generic as Data.Vector.Generic
 import qualified Data.ProtoLens.Runtime.Data.Vector.Unboxed as Data.Vector.Unboxed
 import qualified Data.ProtoLens.Runtime.Text.Read as Text.Read
+body ::
+  forall f s a.
+  (Prelude.Functor f, Data.ProtoLens.Field.HasField s "body" a) =>
+  Lens.Family2.LensLike' f s a
+body = Data.ProtoLens.Field.field @"body"
 deviceId ::
   forall f s a.
   (Prelude.Functor f,
@@ -54,6 +59,11 @@ success ::
   (Prelude.Functor f, Data.ProtoLens.Field.HasField s "success" a) =>
   Lens.Family2.LensLike' f s a
 success = Data.ProtoLens.Field.field @"success"
+title ::
+  forall f s a.
+  (Prelude.Functor f, Data.ProtoLens.Field.HasField s "title" a) =>
+  Lens.Family2.LensLike' f s a
+title = Data.ProtoLens.Field.field @"title"
 userId ::
   forall f s a.
   (Prelude.Functor f, Data.ProtoLens.Field.HasField s "userId" a) =>

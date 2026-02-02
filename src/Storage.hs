@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Storage (addDevice,  RepoT(..), getDevice) where
+module Storage (addDevice,  RepoT, getDevice, processTask, saveTask) where
 
-import Domain(UserID(..), Device(..), Platform(..), )
+import Domain(UserID(..), Device(..), Platform(..), Task (Task, taskId), )
 import Control.Monad.Reader (ReaderT, ask)
 import Control.Monad.IO.Class (liftIO)
-import Database.SQLite.Simple (withConnection, execute, SQLData (SQLText), query, Only (..), executeNamed, Connection)
+import Database.SQLite.Simple (execute, SQLData (SQLText), query, Only (..), Connection, withTransaction, query_, changes, withImmediateTransaction)
 import Database.SQLite.Simple.Internal (Field(..))
 import Database.SQLite.Simple.FromField ( FromField (..), returnError, ResultError (ConversionFailed))
 import Database.SQLite.Simple.FromRow ( field, FromRow(..) )
@@ -22,13 +22,25 @@ data DeviceModel = DeviceModel {
    device :: !String,
    plat :: !Platform
 } deriving (Show)
+
+data TaskModel = TaskModel {
+  _id :: !Int,
+  _device :: !String,
+  _title :: !String,
+  _body :: !String
+}
+
+instance FromRow TaskModel where 
+  fromRow = TaskModel <$> field <*> field <*> field <*> field 
+
+instance ToRow TaskModel where 
+  toRow (TaskModel id did title body) = toRow(id, did, title, body)
  
 instance FromRow DeviceModel where 
   fromRow = DeviceModel <$> field <*> field <*> field
-
 instance ToRow DeviceModel where 
    toRow (DeviceModel { user = uid, device = dev, plat = plat }) = toRow (uid, dev, plat) 
-
+   
 instance ToField Platform where 
   toField Ios = SQLText "ios"
   toField Andorid = SQLText "android" 
@@ -44,7 +56,7 @@ addDevice :: Device -> RepoT (Either DBError Device)
 addDevice device = do 
   conn  <- ask 
   let (UserID uid) = userID device
-  liftIO $ execute conn "INSERT INTO devices (user_id, device_id, platform) VALUES (?, ?, ?) ON CONFLICT DO NOTHING" (DeviceModel uid (deviceID device) (platform device))
+  liftIO $ execute conn "INSERT INTO devices (user_id, device_id, platform) VALUES (?, ?, ?) ON CONFLICT DO NOTHING" (DeviceModel  uid (deviceID device) (platform device))
   -- TODO: add checking, if device already added (to monitor cases)
   return $ Right device 
 
@@ -53,6 +65,55 @@ getDevice :: UserID -> RepoT [Device]
 getDevice uid = do
   conn <- ask 
   let (UserID u) = uid
-  res <- liftIO (query conn "SELECT user_id, device_id, platform FROM devices WHERE user_id = ?" (Only u) :: IO [DeviceModel])
+  res <- liftIO (getDevices conn u)
   return $ map (\(DeviceModel uu did p) -> Device (UserID uu) did p) res
+
+saveTask :: UserID -> String -> String -> RepoT (Either DBError ())
+saveTask uid titleText bodyText = do
+  conn <- ask
+  let (UserID u) = uid
+  liftIO $ withTransaction conn $ do
+    deviceList <- getDevices conn u
+    case deviceList of
+      [] -> return (Left NotFound)
+      _  -> do
+        mapM_ (\d -> insertPush conn (device d) titleText bodyText) deviceList
+        return (Right ())
+
+getDevices :: Connection -> String -> IO [DeviceModel] 
+getDevices conn uid = do
+   query conn "SELECT user_id, device_id, platform FROM devices WHERE user_id = ?" (Only uid)
+
+insertPush ::  Connection -> String -> String -> String -> IO ()
+insertPush conn d t b = 
+  execute conn "INSERT INTO tasks(device_id, title, body) VALUES (?, ? , ?)" (TaskModel 0 d t b)
+
+
+getTask :: Connection -> IO (Maybe Task)
+getTask conn = do
+  res <- liftIO $ query_ conn "SELECT id, device_id, title, body from tasks LIMIT 1" 
+  case res of 
+    [] -> return Nothing
+    [TaskModel i d t b] -> return $ Just (Task i d t b)
+    otherwise -> error "to much data"
+
+
+
+
+deleteTask :: Connection -> Int -> IO ()
+deleteTask conn id = do
+  execute conn "DELETE tasks where locked == true and where id = ?" (Only id)
+  return ()
+
+processTask :: (Task -> IO a) -> RepoT ()
+processTask handler = do
+  conn <- ask 
+  _ <- liftIO $ withImmediateTransaction conn $ do
+        task <- getTask conn 
+        case task of 
+          Nothing -> return ()
+          Just t -> do 
+            _ <- liftIO $ handler t 
+            deleteTask conn (taskId t)
+  return ()
 

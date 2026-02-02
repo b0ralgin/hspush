@@ -1,9 +1,11 @@
-module Cases (addDeviceCase, getDeviceCase) where 
-import Domain (UserID, Device)
-import Storage (addDevice, getDevice)
+module Cases (addDeviceCase, getDeviceCase, sendPushCase) where 
+import Domain (UserID, Device, Task (..))
+import Storage (addDevice, getDevice, processTask, saveTask)
 import Types(AppM, AppEnv(dbPool, logger))
 import MyLogger (Logger(..), LogField (LogField))
-import Control.Monad.Reader (asks, withReaderT, liftIO)
+import Control.Monad.Reader (asks, withReaderT, liftIO, MonadReader (ask), ReaderT (runReaderT))
+import Gates.FCM.Push (sendPush)
+import qualified Data.Text as T
 
 addDeviceCase :: Device -> AppM () 
 addDeviceCase device = do 
@@ -25,3 +27,22 @@ getDeviceCase userid = do
   res <-   withReaderT (const pool) $ getDevice userid
   liftIO $ logInfo log "amount of devices" [(LogField "user" userid), (LogField "amount" $ length res)]
   return res
+
+
+sendPushCase :: UserID -> String -> String -> AppM ()
+sendPushCase userid title' body' = do 
+  pool <- asks dbPool
+  log <- asks logger 
+  liftIO $ logInfo log "add push notification" [(LogField "user" userid), (LogField "title" title') , (LogField "body" body')]
+  res <- withReaderT (const pool) $ saveTask userid title' body'
+  case res of 
+    Left err -> liftIO $ logError log "get devices by user" [(LogField "user" userid), (LogField "error" err)]
+    Right _ -> return ()
+
+workQueue :: AppM ()
+workQueue = do 
+  pool <- asks dbPool
+  env <- ask 
+  res <-  withReaderT (const pool) $ processTask (\(Task _ device' title' body') -> runReaderT (sendPush device' title' $ T.pack body') env) 
+  return res 
+

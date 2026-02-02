@@ -2,9 +2,9 @@
 
 module Gates.Grpc.Server() where 
 import Domain (UserID(..))
-import Gates.Grpc.Proto.Server (AddDeviceRequest, AddDeviceResponse, Platform (PLATFORM_ANDROID, PLATFORM_IOS, PLATFORM_UNKNOWN), GetDevicesRequest, GetDevicesResponse, Device)
-import Gates.Grpc.Proto.Server_Fields(userId, deviceId, platform, success, error, devices)
-import Cases (addDeviceCase, getDeviceCase)
+import Gates.Grpc.Proto.Server (AddDeviceRequest, AddDeviceResponse, Platform (PLATFORM_ANDROID, PLATFORM_IOS, PLATFORM_UNKNOWN), GetDevicesRequest, GetDevicesResponse, Device, SendPushRequest, SendPushResponse)
+import Gates.Grpc.Proto.Server_Fields(userId, deviceId, platform, success, error, devices, title, body)
+import Cases (addDeviceCase, getDeviceCase, sendPushCase)
 import Types (AppM)
 import Control.Lens ((^.), (.~), (&))
 import Control.Monad.Reader (MonadReader(ask))
@@ -12,6 +12,8 @@ import Domain (mkDevice, Platform (Andorid, Ios), Device (Device))
 import qualified Data.Text as Text
 import Data.ProtoLens.Message (Message(defMessage))
 import Prelude hiding (error)
+import Gates.FCM.Push (sendPush)
+import qualified Data.Text as T
 
 handleAddDevice ::AddDeviceRequest -> AppM (AddDeviceResponse)
 handleAddDevice req = do
@@ -32,6 +34,14 @@ handleGetDevices req = do
   res <- getDeviceCase (UserID $ Text.unpack uid)
   return $ defMessage & devices .~ map mapDevice res
 
+
+handleSendPush :: SendPushRequest -> AppM (SendPushResponse)
+handleSendPush req = do
+  let uid = T.unpack $ req ^. userId
+  let bodyMsg = T.unpack $ req ^. body
+  let titleMsg = T.unpack $ req ^. title 
+  sendPushCase (UserID uid) titleMsg bodyMsg 
+  return $ defMessage & success .~ True 
 
 mapDevice :: Domain.Device -> Gates.Grpc.Proto.Server.Device 
 mapDevice (Device _ did' p') = defMessage & deviceId .~ (Text.pack did') & platform .~ (mapFromPlatform p')

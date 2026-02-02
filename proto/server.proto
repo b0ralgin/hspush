@@ -36,9 +36,22 @@ message GetDevicesResponse {
   repeated Device devices = 1;
 }
 
+message SendPushRequest {
+  string user_id = 1;
+  string title = 2;
+  string body = 3;
+}
+
+
+message SendPushResponse {
+  bool success = 1;
+  string error = 2;
+}
+
 service PushService {
   rpc AddDevice(AddDeviceRequest) returns (AddDeviceResponse);
   rpc GetDevices(GetDevicesRequest) returns (GetDevicesResponse);
+  rpc SendPush(SendPushRequest) returns (SendPushResponse);
 }
 
 

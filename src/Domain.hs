@@ -1,5 +1,5 @@
 module Domain
-    ( Device(..), Platform(..), UserID(..), mkDevice,
+    ( Device(..), Platform(..), UserID(..), mkDevice, Task(..)
     ) where
 
 data  Platform = Ios | Andorid deriving Show 
@@ -12,3 +12,12 @@ data  Device = Device
 
 mkDevice :: UserID -> String -> Platform -> Device
 mkDevice = Device
+
+data Task = Task {
+    taskId :: !Int,
+    device :: !String,
+    title :: !String,
+    body :: !String
+}
+
+
