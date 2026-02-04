@@ -1,5 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
-module MyLogger (Logger(..), LogField(..), mkStdoutLogger) where
+module MyLogger (Logger(..), LogField(..), mkStdoutLogger, mkNoopLogger) where
 
 import Data.Time ( getCurrentTime )
 
@@ -23,3 +23,9 @@ mkStdoutLogger = Logger {
       putStrLn $ show currentTime ++  "[ERROR]:" ++ msg ++ ". " ++ fields
   }
   where strLogField (LogField k v) = k ++ ":" ++  show v 
+
+mkNoopLogger :: Logger
+mkNoopLogger = Logger {
+  logInfo = \_ _ -> return (),
+  logError = \_ _ -> return ()
+}

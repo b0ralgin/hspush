@@ -86,23 +86,22 @@ getDevices conn uid = do
 
 insertPush ::  Connection -> String -> String -> String -> IO ()
 insertPush conn d t b = 
-  execute conn "INSERT INTO tasks(device_id, title, body) VALUES (?, ? , ?)" (TaskModel 0 d t b)
+  execute conn "INSERT INTO tasks(device_id, title, body) VALUES (?, ? , ?)" (d, t, b)
 
 
-getTask :: Connection -> IO (Maybe Task)
+getTask :: Connection -> IO (Maybe [Task])
 getTask conn = do
-  res <- liftIO $ query_ conn "SELECT id, device_id, title, body from tasks LIMIT 1" 
+  res <- liftIO $ query_ conn "SELECT id, device_id, title, body from tasks LIMIT 1000" 
   case res of 
     [] -> return Nothing
-    [TaskModel i d t b] -> return $ Just (Task i d t b)
-    otherwise -> error "to much data"
-
+    res -> return $ Just $  map mapTask res
+  where mapTask (TaskModel i d t b) = (Task i d t b)
 
 
 
 deleteTask :: Connection -> Int -> IO ()
 deleteTask conn id = do
-  execute conn "DELETE tasks where locked == true and where id = ?" (Only id)
+  execute conn "DELETE FROM tasks  where id = ?" (Only id)
   return ()
 
 processTask :: (Task -> IO a) -> RepoT ()
@@ -112,8 +111,10 @@ processTask handler = do
         task <- getTask conn 
         case task of 
           Nothing -> return ()
-          Just t -> do 
-            _ <- liftIO $ handler t 
-            deleteTask conn (taskId t)
+          Just tasksList -> do 
+              mapM_ (\t -> do
+                _ <- liftIO $ handler t 
+                deleteTask conn (taskId t)
+                ) tasksList
   return ()
 

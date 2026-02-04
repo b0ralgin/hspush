@@ -9,7 +9,6 @@ copyright:           "2026 Author name here"
 extra-source-files:
 - README.md
 - CHANGELOG.md
-- proto/server.proto
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -42,6 +41,13 @@ dependencies:
 - async
 - tasty
 
+default-extensions:
+  DataKinds
+  OverloadedLabels
+  OverloadedStrings
+  TypeApplications
+  TypeFamilies
+
 ghc-options:
 - -Wall
 - -Wcompat
@@ -57,16 +63,26 @@ library:
   source-dirs: src
 
 executables:
-  hspush-exe:
-    main:                Main.hs
+  hspush-server:
+    main:                Server.hs
     source-dirs:         app
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -main-is Server
     dependencies:
     - hspush
-
+  hspush-client:
+    main:                Client.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -main-is Client
+    dependencies:
+    - hspush
 tests:
   hspush-test:
     main:                Spec.hs

@@ -1,4 +1,4 @@
-module Cases (addDeviceCase, getDeviceCase, sendPushCase, processTaskCase) where 
+module Cases (addDeviceCase, getDeviceCase, sendPushCase, processTaskCase, processfakeTaskCase) where 
 import Domain (UserID, Device, Task (..))
 import Storage (addDevice, getDevice, processTask, saveTask)
 import Types(AppM, AppEnv(dbPool, logger))
@@ -8,6 +8,7 @@ import Gates.FCM.Push (sendPush)
 import qualified Data.Text as T
 import GHC.IORef (IORef(IORef))
 import Data.IORef
+import Control.Concurrent (threadDelay)
 
 addDeviceCase :: Device -> AppM () 
 addDeviceCase device = do 
@@ -48,6 +49,20 @@ processTaskCase = do
   countRef <- liftIO $ newIORef 0
   withReaderT (const pool) $ processTask (\(Task _ device' title' body') -> do
                                                     runReaderT (sendPush device' title' $ T.pack body') env  
+                                                    liftIO $ modifyIORef countRef (+1)
+                                                )
+  liftIO $ readIORef $ countRef  
+
+
+processfakeTaskCase :: AppM Int
+processfakeTaskCase = do 
+  pool <- asks dbPool
+  env <- ask
+  log <- asks logger
+  countRef <- liftIO $ newIORef 0
+  withReaderT (const pool) $ processTask (\(Task _ device' title' body') -> do
+                                                    logInfo log "push sent" [(LogField "device_id" device'), (LogField "title" title'), (LogField "body" body')]
+                                                    -- threadDelay (100000) -- simulate network delay
                                                     liftIO $ modifyIORef countRef (+1)
                                                 )
   liftIO $ readIORef $ countRef  
