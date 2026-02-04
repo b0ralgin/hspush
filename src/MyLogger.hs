@@ -15,11 +15,11 @@ mkStdoutLogger = Logger {
   logInfo = \msg fieldsMap-> do 
       currentTime <- getCurrentTime 
       let fields =  unwords $ map strLogField fieldsMap
-      putStrLn $ show currentTime ++ "[INFO]:" ++ msg ++ " " ++ fields
+      putStrLn $ show currentTime ++ "[INFO]:" ++ msg ++ ". " ++ fields
       
   , logError = \msg fieldsMap->do 
       currentTime <- getCurrentTime 
       let fields =  unwords $ map strLogField fieldsMap
-      putStrLn $ show currentTime ++  "[ERROR]:" ++ msg ++ " " ++ fields
+      putStrLn $ show currentTime ++  "[ERROR]:" ++ msg ++ ". " ++ fields
   }
-  where strLogField (LogField k v) = k ++ show v 
+  where strLogField (LogField k v) = k ++ ":" ++  show v 

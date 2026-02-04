@@ -1,10 +1,10 @@
 module App (runApp, AppM, AppEnv (..)) where
 
-import Control.Monad.Reader (ReaderT, ask, liftIO, runReaderT)
+import Control.Monad.Reader (ReaderT, ask, asks, liftIO, runReaderT)
 import qualified Data.ByteString.Lazy as BL
 import Database.SQLite.Simple (Connection, open)
 import Gates.Grpc.Server (methods)
-import MyLogger (mkStdoutLogger)
+import MyLogger (mkStdoutLogger, Logger (logInfo), LogField (LogField))
 import Network.GRPC.Common
 import Network.GRPC.Server.Run hiding (runServer)
 import Network.GRPC.Server.StreamType
@@ -31,9 +31,11 @@ runApp = do
 runServer :: AppM ()
 runServer = do
   env <- ask
+  log <- asks logger
+  liftIO $ logInfo log "Grpc server is starting" [(LogField "port" defaultInsecurePort)]
   liftIO $ runServerWithHandlers def config $ fromMethods (methods env)
   where
-    config :: ServerConfig
+    config ::   ServerConfig
     config =
       ServerConfig
         { serverInsecure = Just (InsecureConfig (Just "0.0.0.0") defaultInsecurePort),
@@ -41,6 +43,11 @@ runServer = do
         }
 
 runWorker :: AppM ()
-runWorker = forever $ do  
-  processTaskCase 
-  liftIO $ threadDelay (1000000)
+runWorker = do 
+  log <- asks logger
+  liftIO $ logInfo log "worker is starting" []
+  forever $ do  
+    liftIO $ logInfo log "worker processing" []
+    count <- processTaskCase 
+    liftIO $ logInfo log "worker is done" [(LogField "amount of processed events" count)]
+    liftIO $ threadDelay (1000000)

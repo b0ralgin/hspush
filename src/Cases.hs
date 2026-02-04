@@ -6,6 +6,8 @@ import MyLogger (Logger(..), LogField (LogField))
 import Control.Monad.Reader (asks, withReaderT, liftIO, MonadReader (ask), ReaderT (runReaderT))
 import Gates.FCM.Push (sendPush)
 import qualified Data.Text as T
+import GHC.IORef (IORef(IORef))
+import Data.IORef
 
 addDeviceCase :: Device -> AppM () 
 addDeviceCase device = do 
@@ -39,10 +41,14 @@ sendPushCase userid title' body' = do
     Left err -> liftIO $ logError log "get devices by user" [(LogField "user" userid), (LogField "error" err)]
     Right _ -> return ()
 
-processTaskCase :: AppM ()
+processTaskCase :: AppM Int
 processTaskCase = do 
   pool <- asks dbPool
-  env <- ask 
-  res <-  withReaderT (const pool) $ processTask (\(Task _ device' title' body') -> runReaderT (sendPush device' title' $ T.pack body') env) 
-  return res 
+  env <- ask
+  countRef <- liftIO $ newIORef 0
+  withReaderT (const pool) $ processTask (\(Task _ device' title' body') -> do
+                                                    runReaderT (sendPush device' title' $ T.pack body') env  
+                                                    liftIO $ modifyIORef countRef (+1)
+                                                )
+  liftIO $ readIORef $ countRef  
 
