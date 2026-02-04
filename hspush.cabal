@@ -18,7 +18,6 @@ build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
-    proto/server.proto
 
 source-repository head
   type: git
@@ -44,6 +43,8 @@ library
       Paths_hspush
   hs-source-dirs:
       src
+  default-extensions:
+      DataKinds OverloadedLabels OverloadedStrings TypeApplications TypeFamilies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       HsOpenSSL
@@ -68,15 +69,54 @@ library
     , unix-time
   default-language: Haskell2010
 
-executable hspush-exe
-  main-is: Main.hs
+executable hspush-client
+  main-is: Client.hs
   other-modules:
+      Server
       Paths_hspush
   autogen-modules:
       Paths_hspush
   hs-source-dirs:
       app
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  default-extensions:
+      DataKinds OverloadedLabels OverloadedStrings TypeApplications TypeFamilies
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -main-is Client
+  build-depends:
+      HsOpenSSL
+    , RSA
+    , aeson
+    , async
+    , base >=4.7 && <5
+    , base64-bytestring
+    , bytestring
+    , grapesy
+    , hspush
+    , http-conduit
+    , jwt
+    , lens >=5.0
+    , mtl
+    , proto-lens
+    , proto-lens-runtime
+    , proto-lens-setup
+    , sqlite-simple
+    , tasty
+    , text
+    , time
+    , unix-time
+  default-language: Haskell2010
+
+executable hspush-server
+  main-is: Server.hs
+  other-modules:
+      Client
+      Paths_hspush
+  autogen-modules:
+      Paths_hspush
+  hs-source-dirs:
+      app
+  default-extensions:
+      DataKinds OverloadedLabels OverloadedStrings TypeApplications TypeFamilies
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -main-is Server
   build-depends:
       HsOpenSSL
     , RSA
@@ -110,6 +150,8 @@ test-suite hspush-test
       Paths_hspush
   hs-source-dirs:
       test
+  default-extensions:
+      DataKinds OverloadedLabels OverloadedStrings TypeApplications TypeFamilies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HsOpenSSL
