@@ -1,4 +1,4 @@
-module Cases (addDeviceCase, getDeviceCase, sendPushCase) where 
+module Cases (addDeviceCase, getDeviceCase, sendPushCase, processTaskCase) where 
 import Domain (UserID, Device, Task (..))
 import Storage (addDevice, getDevice, processTask, saveTask)
 import Types(AppM, AppEnv(dbPool, logger))
@@ -39,8 +39,8 @@ sendPushCase userid title' body' = do
     Left err -> liftIO $ logError log "get devices by user" [(LogField "user" userid), (LogField "error" err)]
     Right _ -> return ()
 
-workQueue :: AppM ()
-workQueue = do 
+processTaskCase :: AppM ()
+processTaskCase = do 
   pool <- asks dbPool
   env <- ask 
   res <-  withReaderT (const pool) $ processTask (\(Task _ device' title' body') -> runReaderT (sendPush device' title' $ T.pack body') env) 

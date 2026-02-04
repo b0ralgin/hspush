@@ -39,7 +39,8 @@ dependencies:
 - unix-time
 - HsOpenSSL
 - grapesy 
-
+- async
+- tasty
 
 ghc-options:
 - -Wall
