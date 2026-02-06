@@ -51,7 +51,9 @@ extra-deps: [
   http2-tls-0.4.9,
   snappy-c-0.1.2,
   tls-2.1.14,
-  grapesy-1.1.1
+  grapesy-1.1.1,
+  migrant-core-0.1.0.3,
+  sqlite-easy-1.1.1.0
 ]
 
 # Override default flag values for project packages and extra-deps

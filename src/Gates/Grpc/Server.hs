@@ -49,8 +49,8 @@ handleGetDevices env req = do
 handleSendPush :: AppEnv -> Proto SendPushRequest -> IO (Proto SendPushResponse)
 handleSendPush env req = do
   let uid = T.unpack $ req ^. userId
-  let bodyMsg = T.unpack $ req ^. body
-  let titleMsg = T.unpack $ req ^. title 
+  let bodyMsg =  req ^. body
+  let titleMsg =  req ^. title 
   _ <- runReaderT (sendPushCase (UserID uid) titleMsg bodyMsg) env
   return $ defMessage & success .~ True 
 

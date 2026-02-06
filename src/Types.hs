@@ -1,11 +1,11 @@
 module Types (AppEnv(..), AppM) where 
-import Database.SQLite.Simple (Connection)
+import Database.Sqlite.Easy (Pool, Database)
 import MyLogger (Logger)
 import Control.Monad.Reader (ReaderT)
 import Data.ByteString.Lazy (ByteString)
 
 data AppEnv = AppEnv {
-  dbPool :: Connection, 
+  dbPool :: Pool Database, 
   logger :: Logger ,
   googleSecrets :: ByteString,
   googleID :: String

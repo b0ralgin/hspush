@@ -14,7 +14,6 @@ mkDevice :: UserID -> String -> DevicePlatform -> Device
 mkDevice = Device
 
 data Task = Task {
-    taskId :: !Int,
     device :: !String,
     title :: !String,
     body :: !String

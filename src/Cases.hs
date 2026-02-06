@@ -32,7 +32,7 @@ getDeviceCase userid = do
   return res
 
 
-sendPushCase :: UserID -> String -> String -> AppM ()
+sendPushCase :: UserID -> T.Text -> T.Text -> AppM ()
 sendPushCase userid title' body' = do 
   pool <- asks dbPool
   log <- asks logger 
@@ -47,7 +47,7 @@ processTaskCase = do
   pool <- asks dbPool
   env <- ask
   countRef <- liftIO $ newIORef 0
-  withReaderT (const pool) $ processTask (\(Task _ device' title' body') -> do
+  withReaderT (const pool) $ processTask (\(Task device' title' body') -> do
                                                     runReaderT (sendPush device' title' $ T.pack body') env  
                                                     liftIO $ modifyIORef countRef (+1)
                                                 )
@@ -60,7 +60,7 @@ processfakeTaskCase = do
   env <- ask
   log <- asks logger
   countRef <- liftIO $ newIORef 0
-  withReaderT (const pool) $ processTask (\(Task _ device' title' body') -> do
+  withReaderT (const pool) $ processTask (\(Task  device' title' body') -> do
                                                     logInfo log "push sent" [(LogField "device_id" device'), (LogField "title" title'), (LogField "body" body')]
                                                     -- threadDelay (100000) -- simulate network delay
                                                     liftIO $ modifyIORef countRef (+1)

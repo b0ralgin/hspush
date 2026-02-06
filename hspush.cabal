@@ -62,7 +62,7 @@ library
     , proto-lens
     , proto-lens-runtime
     , proto-lens-setup
-    , sqlite-simple
+    , sqlite-easy
     , tasty
     , text
     , time
@@ -98,7 +98,7 @@ executable hspush-client
     , proto-lens
     , proto-lens-runtime
     , proto-lens-setup
-    , sqlite-simple
+    , sqlite-easy
     , tasty
     , text
     , time
@@ -134,7 +134,7 @@ executable hspush-server
     , proto-lens
     , proto-lens-runtime
     , proto-lens-setup
-    , sqlite-simple
+    , sqlite-easy
     , tasty
     , text
     , time
@@ -170,7 +170,7 @@ test-suite hspush-test
     , proto-lens
     , proto-lens-runtime
     , proto-lens-setup
-    , sqlite-simple
+    , sqlite-easy
     , tasty
     , text
     , time

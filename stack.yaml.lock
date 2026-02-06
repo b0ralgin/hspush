@@ -81,6 +81,20 @@ packages:
       size: 11516
   original:
     hackage: grapesy-1.1.1
+- completed:
+    hackage: migrant-core-0.1.0.3@sha256:f0d4e77e31dd699aff6cd4b4516a6370fe19f598e3d4d159d4c39ab7026c1625,1425
+    pantry-tree:
+      sha256: 17ecf3bdbaa2f4baa4e686b754c6f899f6a6746e718668bda42fbb1560dd81bb
+      size: 730
+  original:
+    hackage: migrant-core-0.1.0.3
+- completed:
+    hackage: sqlite-easy-1.1.1.0@sha256:57538ee4bac16992b8561b1c205ad21962b5840567379770bf2efc29822401fb,1563
+    pantry-tree:
+      sha256: f163bd3f55620da5529c2b627057ca08260f0b3bb94d57a7914dc030bf707699
+      size: 600
+  original:
+    hackage: sqlite-easy-1.1.1.0
 snapshots:
 - completed:
     sha256: c320c36b8a392602c9076bdd0c656e12dcab30f294105a50c3f8ef963c4c3a0d

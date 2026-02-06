@@ -3,7 +3,6 @@ module App (runApp, AppM, AppEnv (..)) where
 
 import Control.Monad.Reader (ReaderT, ask, asks, liftIO, runReaderT)
 import qualified Data.ByteString.Lazy as BL
-import Database.SQLite.Simple (Connection, open)
 import Gates.Grpc.Server (methods)
 import MyLogger (mkStdoutLogger, Logger (logInfo, logError), LogField (LogField), mkNoopLogger)
 import Network.GRPC.Common
@@ -17,19 +16,20 @@ import Cases (processTaskCase, processfakeTaskCase)
 import Control.Monad (forever)
 import Network.GRPC.Server (ServerParams(ServerParams, serverTopLevel), RequestHandler)
 import Control.Exception (SomeException, catch)
+import Database.Sqlite.Easy (createSqlitePool, ConnectionString(..))
+import qualified Data.Text as T
 
 runApp :: IO ()
 runApp = do
-  dbConn <- getEnv "HSPUSH_SQLITE_DB"
-  conn <- open dbConn
-  workerConn <- open dbConn
+  dbFile <- getEnv "HSPUSH_SQLITE_DB"
+  conn <- createSqlitePool (ConnectionString $ T.pack dbFile)
   gsFile <- getEnv "HSPUSH_GOOGLE_SECRETS_FILE"
   putStrLn gsFile
   fileContent <- BL.readFile gsFile
   googleID <- getEnv "HSPUSH_GOOGLE_ID"
   
   let env = AppEnv conn mkNoopLogger fileContent googleID
-  let wenv = AppEnv workerConn mkStdoutLogger fileContent googleID
+  let wenv = AppEnv conn mkStdoutLogger fileContent googleID
   race_ (runReaderT runServer env) (runReaderT runWorker wenv)
   
 
