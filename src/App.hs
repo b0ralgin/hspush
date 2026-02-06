@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module App (runApp, AppM, AppEnv (..)) where
 
@@ -18,27 +19,32 @@ import Network.GRPC.Common
 import Network.GRPC.Server (RequestHandler, ServerParams (ServerParams, serverTopLevel))
 import Network.GRPC.Server.Run hiding (runServer)
 import Network.GRPC.Server.StreamType
-import System.Environment (getEnv)
+import System.Environment (getEnv, lookupEnv)
 import Types
+import Network.Socket (PortNumber)
+
 
 runApp :: IO ()
 runApp = do
   dbFile <- getEnv "HSPUSH_SQLITE_DB"
   conn <- mkDB (ConnectionString $ T.pack dbFile)
   gsFile <- getEnv "HSPUSH_GOOGLE_SECRETS_FILE"
+  mPortStr <- lookupEnv "HSPUSH_GRPC_PORT"
+  let port :: PortNumber
+      port = maybe defaultInsecurePort read mPortStr
   putStrLn gsFile
   fileContent <- BL.readFile gsFile
   googleID <- getEnv "HSPUSH_GOOGLE_ID"
 
   let env = AppEnv conn mkNoopLogger fileContent googleID
   let wenv = AppEnv conn mkStdoutLogger fileContent googleID
-  race_ (runReaderT runServer env) (runReaderT runWorker wenv)
+  race_ (runAppM (runServer port) env) (runAppM runWorker wenv)
 
-runServer :: AppM ()
-runServer = do
+runServer :: PortNumber ->  AppM ()
+runServer port = do
   env <- ask
   log <- asks logger
-  liftIO $ logInfo log "Grpc server is starting" [(LogField "port" defaultInsecurePort)]
+  liftIO $ logInfo log "Grpc server is starting" [(LogField "port" defaultInsecurePort), (LogField "port" port)]
   let d =
         def
           { serverTopLevel = logExceptions log
@@ -48,7 +54,7 @@ runServer = do
     config :: ServerConfig
     config =
       ServerConfig
-        { serverInsecure = Just (InsecureConfig (Just "0.0.0.0") defaultInsecurePort),
+        { serverInsecure = Just (InsecureConfig { insecureHost = (Just "0.0.0.0"), insecurePort = port }),
           serverSecure = Nothing
         }
 
@@ -63,6 +69,7 @@ logExceptions log h unmask req resp = h unmask req resp `catch` handler
 runWorker :: AppM ()
 runWorker = do
   log <- asks logger
+  env <- ask
   liftIO $ logInfo log "worker is starting" []
   forever $ do
     liftIO $ logInfo log "worker processing" []
