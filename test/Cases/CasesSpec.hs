@@ -1,7 +1,7 @@
 module Cases.CasesSpec (spec) where 
 
 import Test.Hspec
-import Cases (addDeviceCase)
+import Cases (addDeviceCase, getDeviceCase)
 import Types
 import Control.Monad.Reader
 import Gates.Storage.Sqlite (mkDB)
@@ -15,3 +15,20 @@ spec = describe "use cases" $ do
     conn <- liftIO $  mkDB ":memory:"
     let env = AppEnv conn mkNoopLogger BS.empty "test"
     runAppM (addDeviceCase (Device (UserID "1") "a" Ios) ) env
+  it "should add device and get it back" $ do 
+    conn <- liftIO $  mkDB ":memory:"
+    let env = AppEnv conn mkNoopLogger BS.empty "test"
+    res <- runAppM ( do
+      addDeviceCase (Device (UserID "1") "b" Ios)
+      getDeviceCase (UserID "1") 
+      ) env
+    (length res) `shouldBe` 1
+  it "should add  2 devices and get them back" $ do 
+    conn <- liftIO $  mkDB ":memory:"
+    let env = AppEnv conn mkNoopLogger BS.empty "test"
+    res <- runAppM ( do
+      addDeviceCase (Device (UserID "1") "a" Ios)
+      addDeviceCase (Device (UserID "1") "b" Ios)
+      getDeviceCase (UserID "1") 
+      ) env
+    (length res) `shouldBe` 2

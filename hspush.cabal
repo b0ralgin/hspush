@@ -55,14 +55,15 @@ library
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , exceptions
     , grapesy
     , http-conduit
     , jwt
     , lens >=5.0
     , mtl
+    , network
     , proto-lens
     , proto-lens-runtime
-    , proto-lens-setup
     , sqlite-easy
     , tasty
     , text
@@ -90,15 +91,16 @@ executable hspush-client
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , exceptions
     , grapesy
     , hspush
     , http-conduit
     , jwt
     , lens >=5.0
     , mtl
+    , network
     , proto-lens
     , proto-lens-runtime
-    , proto-lens-setup
     , sqlite-easy
     , tasty
     , text
@@ -126,15 +128,16 @@ executable hspush-server
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , exceptions
     , grapesy
     , hspush
     , http-conduit
     , jwt
     , lens >=5.0
     , mtl
+    , network
     , proto-lens
     , proto-lens-runtime
-    , proto-lens-setup
     , sqlite-easy
     , tasty
     , text
@@ -146,6 +149,7 @@ test-suite hspush-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Cases.CasesSpec
       Paths_hspush
   autogen-modules:
       Paths_hspush
@@ -162,15 +166,18 @@ test-suite hspush-test
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , exceptions
     , grapesy
+    , hspec
+    , hspec-discover
     , hspush
     , http-conduit
     , jwt
     , lens >=5.0
     , mtl
+    , network
     , proto-lens
     , proto-lens-runtime
-    , proto-lens-setup
     , sqlite-easy
     , tasty
     , text

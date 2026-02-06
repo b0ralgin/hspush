@@ -5,13 +5,13 @@ runMigrations :: SQLite ()
 runMigrations = migrate migrations migrateUp migrateDown 
 
 migrations :: [MigrationName]
-migrations = []
+migrations = ["add_devices", "add_tasks"]
 
 
 migrateUp :: MigrationName -> SQLite ()
 migrateUp "add_devices" = void (run "CREATE TABLE IF NOT EXISTS  devices (user_id TEXT, device_id TEXT, platform TEXT,  PRIMARY KEY (user_id, device_id))")
 migrateUp "add_tasks" = void (run "CREATE TABLE IF NOT EXISTS  tasks ( \
-  \ id INTEGER PRIMARY KEY AUTOINCREMENT,  -- или просто INTEGER PRIMARY KEY \
+  \ id INTEGER PRIMARY KEY AUTOINCREMENT,  \
  \ device_id TEXT NOT NULL, \
   \ title TEXT NOT NULL, \
   \ body TEXT NOT NULL)")
