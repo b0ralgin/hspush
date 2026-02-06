@@ -34,8 +34,9 @@ library
       Gates.Grpc.Proto.Server_Fields
       Gates.Grpc.Proto.ServerMeta
       Gates.Grpc.Server
+      Gates.Storage.Migrations
+      Gates.Storage.Sqlite
       MyLogger
-      Storage
       Types
   other-modules:
       Paths_hspush

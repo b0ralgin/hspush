@@ -20,14 +20,14 @@ pushURL projectID = printf "https://fcm.googleapis.com/v1/projects/%s/messages:s
 
 data PushRequest = PushRequest {
   token :: String ,
-  title :: String ,
+  title :: T.Text ,
   body :: T.Text 
 }
 
 instance ToJSON PushRequest where 
   toJSON (PushRequest token title body) = object ["message" .= object ["token" .= token, "notification" .= object ["title" .= title, "body" .= body]]]
 
-sendPush :: String  -> String -> T.Text -> AppM (Maybe PushError)
+sendPush :: String  -> T.Text -> T.Text -> AppM (Maybe PushError)
 sendPush deviceID title txt = do
   token <- getJWTToken 
   projectID <- asks googleID

@@ -8,6 +8,7 @@ import Gates.Grpc.Proto.Server
 import Gates.Grpc.Proto.Server_Fields
 import Gates.Grpc.Proto.ServerMeta
 
+
 main :: IO ()
 main = do 
    withConnection def server $ \conn -> do

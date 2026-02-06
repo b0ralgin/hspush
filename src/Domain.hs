@@ -1,6 +1,7 @@
 module Domain
     ( Device(..), DevicePlatform(..), UserID(..), mkDevice, Task(..)
     ) where
+import qualified Data.Text as T
 
 data  DevicePlatform = Ios | Andorid deriving Show 
 newtype UserID = UserID String deriving Show 
@@ -15,8 +16,8 @@ mkDevice = Device
 
 data Task = Task {
     device :: !String,
-    title :: !String,
-    body :: !String
+    title :: !T.Text,
+    body :: !T.Text
 }
 
 
