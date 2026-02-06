@@ -3,9 +3,8 @@
 module Gates.Storage.Sqlite (mkDB) where
 
 import Domain(UserID(..), Device(..), DevicePlatform(..), Task (Task), )
-import Control.Monad.Reader (ReaderT, ask)
 import Control.Monad.IO.Class (liftIO)
-import Database.Sqlite.Easy (Pool, Database, withPool, SQLData (..), runWith, run, ConnectionString, createSqlitePool, SQLite)
+import Database.Sqlite.Easy (withPool, SQLData (..), runWith, run, ConnectionString, createSqlitePool, SQLite)
 import qualified Data.Text  as  T 
 import Types (DB(..))
 import Gates.Storage.Migrations (runMigrations)

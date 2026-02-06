@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Gates.FCM.Push  where
+{-# LANGUAGE InstanceSigs #-}
+module Gates.FCM.Push (sendPushFCM)  where
 
 import Gates.FCM.Oauth (getJWTToken, OauthError(ParseError, NetworkError, InvalidToken), JWT(..))
 import qualified Data.Text as T
-import Types (AppM, AppEnv (googleID))
+import Types (AppM, AppEnv (googleID), PushMonad(..), PushError(..))
 import Network.HTTP.Client.Conduit (parseRequest)
 import Text.Printf (printf)
 import Control.Monad.Reader (asks, liftIO)
@@ -12,7 +13,8 @@ import Network.HTTP.Simple (setRequestMethod, setRequestBodyJSON, httpJSONEither
 import Data.ByteString.Char8 as BS hiding (putStrLn)
 
 
-data PushError = PushError String String | InvalidTokenErr deriving Show 
+instance PushMonad AppM where 
+    sendPush = sendPushFCM
 
 pushURL :: String  -> String 
 pushURL projectID = printf "https://fcm.googleapis.com/v1/projects/%s/messages:send" projectID
@@ -27,8 +29,8 @@ data PushRequest = PushRequest {
 instance ToJSON PushRequest where 
   toJSON (PushRequest token title body) = object ["message" .= object ["token" .= token, "notification" .= object ["title" .= title, "body" .= body]]]
 
-sendPush :: String  -> T.Text -> T.Text -> AppM (Maybe PushError)
-sendPush deviceID title txt = do
+sendPushFCM :: String  -> T.Text -> T.Text -> AppM (Maybe PushError)
+sendPushFCM deviceID title txt = do
   token <- getJWTToken 
   projectID <- asks googleID
   case token of 

@@ -7,7 +7,7 @@ import Gates.Grpc.Proto.Server (AddDeviceRequest, AddDeviceResponse, Platform (P
 import Gates.Grpc.Proto.ServerMeta ()
 import Gates.Grpc.Proto.Server_Fields(userId, deviceId, platform, success, error, devices, title, body)
 import Cases (addDeviceCase, getDeviceCase, sendPushCase)
-import Types (AppM, AppEnv)
+import Types (AppM, AppEnv, runAppM)
 import Control.Monad.Reader (runReaderT)
 import Control.Lens ((^.), (.~), (&))
 import Control.Monad.Reader (MonadReader(ask))
@@ -37,13 +37,13 @@ handleAddDevice env req = do
   case p of 
     Nothing -> return $ defMessage & success .~ False & error .~ Text.pack ("wrong platfrom type") -- TODO: add throwM GrpcExecption 
     Just platform' -> do
-      _ <- runReaderT (addDeviceCase $ mkDevice (UserID $ Text.unpack uid) (Text.unpack did) platform') env
+      _ <- runAppM (addDeviceCase $ mkDevice (UserID $ Text.unpack uid) (Text.unpack did) platform') env
       return $ defMessage & success .~ True
 
 handleGetDevices :: AppEnv -> Proto GetDevicesRequest -> IO (Proto GetDevicesResponse)
 handleGetDevices env req = do
   let uid = req ^. userId
-  res <- runReaderT (getDeviceCase (UserID $ Text.unpack uid)) env
+  res <- runAppM (getDeviceCase (UserID $ Text.unpack uid)) env
   return $ defMessage & devices .~ map mapDevice res
 
 handleSendPush :: AppEnv -> Proto SendPushRequest -> IO (Proto SendPushResponse)
@@ -51,7 +51,7 @@ handleSendPush env req = do
   let uid = T.unpack $ req ^. userId
   let bodyMsg =  req ^. body
   let titleMsg =  req ^. title 
-  _ <- runReaderT (sendPushCase (UserID uid) titleMsg bodyMsg) env
+  _ <- runAppM (sendPushCase (UserID uid) titleMsg bodyMsg) env
   return $ defMessage & success .~ True 
 
 

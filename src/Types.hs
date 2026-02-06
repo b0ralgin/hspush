@@ -1,9 +1,15 @@
-module Types (AppEnv(..), AppM, DB(..)) where 
-import Database.Sqlite.Easy (Pool, Database)
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+module Types (AppEnv(..), AppM, DB(..), PushMonad(..), PushError(..), runAppM) where 
 import MyLogger (Logger)
-import Control.Monad.Reader (ReaderT)
+import Control.Monad.Reader (ReaderT (runReaderT), MonadIO, MonadReader)
 import Data.ByteString.Lazy (ByteString)
 import Domain (Device, UserID, Task)
+import qualified Data.Text as T
+import Control.Monad.Catch (MonadThrow, MonadCatch)
+
+data PushError = PushError String String | InvalidTokenErr deriving Show 
+class Monad m => PushMonad m where 
+  sendPush :: String  -> T.Text -> T.Text -> m (Maybe PushError)
 
 data AppEnv = AppEnv {
   db :: DB,
@@ -12,8 +18,11 @@ data AppEnv = AppEnv {
   googleID :: String
 }
 
-type AppM = ReaderT AppEnv IO
+newtype AppM a = AppM (ReaderT AppEnv IO a)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadReader AppEnv, MonadThrow  , MonadCatch )
 
+runAppM :: AppM a -> AppEnv -> IO a 
+runAppM (AppM m) = runReaderT m
 
 data DB = DB {
   addDevice :: Device -> IO (),
@@ -21,4 +30,3 @@ data DB = DB {
   saveTask :: UserID -> Task -> IO (),
   processTask :: (Task -> IO ()) -> IO ()
 }
-

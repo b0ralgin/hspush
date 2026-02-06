@@ -19,5 +19,3 @@ data Task = Task {
     title :: !T.Text,
     body :: !T.Text
 }
-
-

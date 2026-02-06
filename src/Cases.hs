@@ -1,13 +1,14 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Cases (addDeviceCase, getDeviceCase, sendPushCase, processTaskCase, processfakeTaskCase) where 
 import Domain (UserID, Device, Task (..))
-import Types(AppM, AppEnv(db, logger), DB(addDevice, getDevices, saveTask, processTask))
+import Types(AppM, AppEnv(db, logger), DB(addDevice, getDevices, saveTask, processTask), PushMonad (sendPush), runAppM)
 import MyLogger (Logger(..), LogField (LogField))
-import Control.Monad.Reader (asks, withReaderT, liftIO, MonadReader (ask), ReaderT (runReaderT))
-import Gates.FCM.Push (sendPush)
+import Control.Monad.Reader (asks, withReaderT, liftIO, MonadReader (ask), ReaderT (runReaderT), MonadIO)
 import qualified Data.Text as T
 import GHC.IORef (IORef(IORef))
 import Data.IORef
 import Control.Concurrent (threadDelay)
+import Gates.FCM.Push (sendPushFCM)
 
 addDeviceCase :: Device -> AppM () 
 addDeviceCase device = do 
@@ -37,11 +38,11 @@ sendPushCase userid title' body' = do
 
 processTaskCase :: AppM Int
 processTaskCase = do 
-  db <- asks db
   env <- ask
+  db <- asks db
   countRef <- liftIO $ newIORef 0
   liftIO $ processTask db (\(Task device' title' body') -> do
-                                                    runReaderT (sendPush device' title' body') env  
+                                                    runAppM (sendPush device' title' body') env  
                                                     liftIO $ modifyIORef countRef (+1)
                                                 )
   liftIO $ readIORef $ countRef  
