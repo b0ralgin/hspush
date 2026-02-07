@@ -46,7 +46,7 @@ getDeviceDB userid = do
 
 saveTaskDB :: UserID -> Task ->  SQLite ()
 saveTaskDB (UserID uid) (Task _  titleText bodyText) = do 
-  runWith "INSERT INTO tasks (device_id, title, body)" [(SQLText $ T.pack uid), (SQLText titleText), (SQLText bodyText)]
+  runWith "INSERT INTO tasks (device_id, title, body) VALUES (?, ?, ?)" [(SQLText $ T.pack uid), (SQLText titleText), (SQLText bodyText)]
   return ()
 
 
