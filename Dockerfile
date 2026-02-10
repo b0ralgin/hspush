@@ -19,8 +19,7 @@ COPY package.yaml package.yaml
 COPY hspush.cabal hspush.cabal
 
 # Install required GHC for snapshot and build deps
-RUN stack setup --install-ghc && \
-    stack build --only-dependencies
+RUN stack build --only-dependencies
 
 # Copy source
 COPY . .

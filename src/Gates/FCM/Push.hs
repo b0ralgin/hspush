@@ -26,12 +26,15 @@ data PushRequest = PushRequest {
   token :: String ,
   title :: T.Text ,
   body :: T.Text,
-  data' :: Map String T.Text
+  data' :: Maybe (Map String T.Text)
 }
 
-instance ToJSON PushRequest where 
-  toJSON (PushRequest token title body data') = object ["message" .= object ["token" .= token, "notification" .= object ["title" .= title, "body" .= body, "data" .= data']]]
 
+instance ToJSON PushRequest where 
+  toJSON (PushRequest token title body data') = 
+    object ["message" .= object ["token" .= token, "notification" .= notification]]
+    where notification = 
+              object $ ["title" .= title, "body" .= body] <> maybe [] (\d -> ["data" .= d]) data'
 sendPushFCM :: Push-> AppM (Maybe PushError)
 sendPushFCM  (Push deviceID title body data') = do
   token <- getJWTToken 
@@ -47,9 +50,9 @@ sendPushFCM  (Push deviceID title body data') = do
       let request = 
             setRequestMethod "POST" $
             setRequestBearerAuth (BS.pack t) $ 
-              setRequestBodyJSON (PushRequest deviceID title body (fromList data') ) 
+              setRequestBodyJSON (PushRequest deviceID title body (mapData data') ) 
                 initReq
-     -- liftIO $ putStrLn $ show $ encode (PushRequest deviceID title body (fromList data') )  
+      liftIO $ putStrLn $ show $ encode (PushRequest deviceID title body (mapData data') )  
       liftIO $ putStrLn $ show $ request
       result <- httpNoBody request
       liftIO $ putStrLn $ show result
@@ -62,4 +65,9 @@ sendPushFCM  (Push deviceID title body data') = do
     getNetworkErr from  500 = PushError from "internal error"
     getNetworkErr from 400 = PushError from "bad request"
     getNetworkErr from code = PushError from $ "http code" ++ show code 
+    mapData d = 
+      if (Prelude.length d) >0 then 
+        Just ((fromList data'))
+      else 
+        Nothing
 

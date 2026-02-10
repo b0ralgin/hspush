@@ -16,7 +16,7 @@ main = do
       let req = defMessage & userId .~ "client1" & deviceId .~ "device1" & platform .~ (Proto PLATFORM_ANDROID)
       resp <- nonStreaming conn (rpc @(Protobuf PushService "addDevice")) req
       print resp
-      let preq = defMessage & userId .~ "client1" & title .~ "title" & body .~ "body test" & data' .~ (fromList [("document", "doc1")])  
+      let preq = defMessage & userId .~ "client1" & title .~ "title" & body .~ "body test"
       presp <- nonStreaming conn (rpc @(Protobuf PushService "sendPush")) preq
       print presp
   where
