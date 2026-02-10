@@ -52,10 +52,7 @@ sendPushFCM  (Push deviceID title body data') = do
             setRequestBearerAuth (BS.pack t) $ 
               setRequestBodyJSON (PushRequest deviceID title body (mapData data') ) 
                 initReq
-      liftIO $ putStrLn $ show $ encode (PushRequest deviceID title body (mapData data') )  
-      liftIO $ putStrLn $ show $ request
       result <- httpNoBody request
-      liftIO $ putStrLn $ show result
       case getResponseStatusCode result of 
         200 -> return $ Nothing
         201 -> return $ Nothing
