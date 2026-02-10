@@ -7,7 +7,7 @@ import Control.Monad.Reader
 import Gates.Storage.Sqlite (mkDB)
 import MyLogger (mkNoopLogger)
 import qualified Data.ByteString.Lazy as BS
-import Domain (Device(Device), UserID (UserID), DevicePlatform (Ios))
+import Domain (Device(Device), UserID (UserID), DevicePlatform (Ios), Push (..))
 import qualified Data.Text as T
 import Mocks.FCM (mockSendPush)
 
@@ -41,14 +41,24 @@ spec = describe "use cases" $ do
     let env = AppEnv conn mkNoopLogger BS.empty "test"
     runAppM ( do
       addDeviceCase (Device (UserID "1") "a" Ios)
-      sendPushCase (UserID "1") (T.pack "test") (T.pack "value")
+      sendPushCase (UserID "1") (Push "" (T.pack "test") (T.pack "value") [])
       ) env
   it "process task" $ do 
     conn <- liftIO $  mkDB ":memory:"
     let env = AppEnv conn mkNoopLogger BS.empty "test"
     res <- runAppM ( do
       addDeviceCase (Device (UserID "1") "a" Ios)
-      sendPushCase (UserID "1") (T.pack "test") (T.pack "value")
+      sendPushCase (UserID "1") (Push "" (T.pack "test") (T.pack "value") [])
       processTaskCase
       ) env
     res `shouldBe` 1
+  it "add push with data" $ do 
+    conn <- liftIO $ mkDB ":memory:"
+    let env = AppEnv conn mkNoopLogger BS.empty "test"
+    _ <- runAppM ( do 
+      addDeviceCase (Device (UserID "1") "a" Ios)
+      sendPushCase (UserID "1") push 
+      processTaskCase
+      ) env
+    return ()
+    where push = (Push "1"(T.pack "test") (T.pack "value") [("type", "document"), ("document_id", "1")])

@@ -1,5 +1,5 @@
 module Domain
-    ( Device(..), DevicePlatform(..), UserID(..), mkDevice, Task(..)
+    ( Device(..), DevicePlatform(..), UserID(..), mkDevice, Push(..), PushData,
     ) where
 import qualified Data.Text as T
 
@@ -14,8 +14,12 @@ data  Device = Device
 mkDevice :: UserID -> String -> DevicePlatform -> Device
 mkDevice = Device
 
-data Task = Task {
+data Push = Push {
     device :: !String,
     title :: !T.Text,
-    body :: !T.Text
+    body :: !T.Text,
+    data' :: !PushData
 }
+
+type PushData = [(String, T.Text)]
+

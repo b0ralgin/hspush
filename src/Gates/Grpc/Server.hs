@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedLabels #-}
 
 module Gates.Grpc.Server(methods) where 
-import Domain (UserID(..))
+import Domain (UserID(..), PushData(..), Push (Push))
 import Gates.Grpc.Proto.Server (AddDeviceRequest, AddDeviceResponse, Platform (PLATFORM_ANDROID, PLATFORM_IOS, PLATFORM_UNKNOWN), GetDevicesRequest, GetDevicesResponse, Device, SendPushRequest, SendPushResponse, PushService)
 -- Bring in metadata instances for PushService
 import Gates.Grpc.Proto.ServerMeta ()
-import Gates.Grpc.Proto.Server_Fields(userId, deviceId, platform, success, error, devices, title, body)
+import Gates.Grpc.Proto.Server_Fields(userId, deviceId, platform, success, error, devices, title, body, data')
 import Cases (addDeviceCase, getDeviceCase, sendPushCase)
 import Types (AppM, AppEnv, runAppM)
 import Control.Monad.Reader (runReaderT)
@@ -21,6 +21,9 @@ import Network.GRPC.Common.Protobuf
 import Network.GRPC.Server.Protobuf
 import Network.GRPC.Server.Run
 import Network.GRPC.Server.StreamType
+import Data.Map (fold, Map)
+import Data.IntMap (foldWithKey)
+import Data.Map (foldrWithKey)
 
 methods :: AppEnv -> Methods IO (ProtobufMethodsOf PushService)
 methods env =
@@ -51,9 +54,13 @@ handleSendPush env req = do
   let uid = T.unpack $ req ^. userId
   let bodyMsg =  req ^. body
   let titleMsg =  req ^. title 
-  _ <- runAppM (sendPushCase (UserID uid) titleMsg bodyMsg) env
-  return $ defMessage & success .~ True 
+  let pushdata = req ^. data'
 
+  _ <- runAppM (sendPushCase (UserID uid) (Push "" titleMsg bodyMsg (mapData pushdata))) env
+  return $ defMessage & success .~ True 
+  where 
+    mapData :: Map T.Text T.Text -> PushData
+    mapData d = foldrWithKey (\key val acc -> ((T.unpack key),val):acc) [] d 
 
 mapDevice :: Domain.Device ->Proto  Gates.Grpc.Proto.Server.Device 
 mapDevice (Device _ did' p') = defMessage & deviceId .~ (Text.pack did') & platform .~ (mapFromPlatform p')

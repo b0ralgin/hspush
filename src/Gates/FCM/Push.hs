@@ -11,6 +11,8 @@ import Control.Monad.Reader (asks, liftIO)
 import Data.Aeson (object, ToJSON (toJSON), (.=), decode, encode)
 import Network.HTTP.Simple (setRequestMethod, setRequestBodyJSON, httpJSONEither, getResponseStatusCode, httpNoBody, setRequestBearerAuth)
 import Data.ByteString.Char8 as BS hiding (putStrLn)
+import Domain (Push(..), PushData)
+import Data.Map
 
 
 instance PushMonad AppM where 
@@ -23,14 +25,15 @@ pushURL projectID = printf "https://fcm.googleapis.com/v1/projects/%s/messages:s
 data PushRequest = PushRequest {
   token :: String ,
   title :: T.Text ,
-  body :: T.Text 
+  body :: T.Text,
+  data' :: Map String T.Text
 }
 
 instance ToJSON PushRequest where 
-  toJSON (PushRequest token title body) = object ["message" .= object ["token" .= token, "notification" .= object ["title" .= title, "body" .= body]]]
+  toJSON (PushRequest token title body data') = object ["message" .= object ["token" .= token, "notification" .= object ["title" .= title, "body" .= body, "data" .= data']]]
 
-sendPushFCM :: String  -> T.Text -> T.Text -> AppM (Maybe PushError)
-sendPushFCM deviceID title txt = do
+sendPushFCM :: Push-> AppM (Maybe PushError)
+sendPushFCM  (Push deviceID title body data') = do
   token <- getJWTToken 
   projectID <- asks googleID
   case token of 
@@ -44,8 +47,9 @@ sendPushFCM deviceID title txt = do
       let request = 
             setRequestMethod "POST" $
             setRequestBearerAuth (BS.pack t) $ 
-              setRequestBodyJSON (PushRequest deviceID title txt) 
+              setRequestBodyJSON (PushRequest deviceID title body (fromList data') ) 
                 initReq
+     -- liftIO $ putStrLn $ show $ encode (PushRequest deviceID title body (fromList data') )  
       liftIO $ putStrLn $ show $ request
       result <- httpNoBody request
       liftIO $ putStrLn $ show result

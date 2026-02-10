@@ -42,6 +42,7 @@ dependencies:
 - tasty
 - network
 - exceptions
+- containers
 
 default-extensions:
   DataKinds

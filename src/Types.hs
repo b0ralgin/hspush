@@ -3,13 +3,13 @@ module Types (AppEnv(..), AppM, DB(..), PushMonad(..), PushError(..), runAppM) w
 import MyLogger (Logger)
 import Control.Monad.Reader (ReaderT (runReaderT), MonadIO, MonadReader)
 import Data.ByteString.Lazy (ByteString)
-import Domain (Device, UserID, Task)
+import Domain (Device, UserID, Push)
 import qualified Data.Text as T
 import Control.Monad.Catch (MonadThrow, MonadCatch)
 
 data PushError = PushError String String | InvalidTokenErr deriving Show 
 class Monad m => PushMonad m where 
-  sendPush :: String  -> T.Text -> T.Text -> m (Maybe PushError)
+  sendPush :: Push -> m (Maybe PushError)
 
 data AppEnv = AppEnv {
   db :: DB,
@@ -27,6 +27,6 @@ runAppM (AppM m) = runReaderT m
 data DB = DB {
   addDevice :: Device -> IO (),
   getDevices :: UserID -> IO [Device],
-  saveTask :: UserID -> Task -> IO (),
-  processTask :: (Task -> IO ()) -> IO ()
+  saveTask :: UserID -> Push -> IO (),
+  processTask :: (Push -> IO ()) -> IO ()
 }

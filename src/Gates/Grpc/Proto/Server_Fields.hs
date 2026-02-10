@@ -1,4 +1,4 @@
-{- This file was auto-generated from proto/server.proto by the proto-lens-protoc program. -}
+{- This file was auto-generated from server.proto by the proto-lens-protoc program. -}
 {-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, DataKinds, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies#-}
 {-# OPTIONS_GHC -Wno-unused-imports#-}
 {-# OPTIONS_GHC -Wno-duplicate-exports#-}
@@ -32,6 +32,11 @@ body ::
   (Prelude.Functor f, Data.ProtoLens.Field.HasField s "body" a) =>
   Lens.Family2.LensLike' f s a
 body = Data.ProtoLens.Field.field @"body"
+data' ::
+  forall f s a.
+  (Prelude.Functor f, Data.ProtoLens.Field.HasField s "data'" a) =>
+  Lens.Family2.LensLike' f s a
+data' = Data.ProtoLens.Field.field @"data'"
 deviceId ::
   forall f s a.
   (Prelude.Functor f,
@@ -48,6 +53,11 @@ error ::
   (Prelude.Functor f, Data.ProtoLens.Field.HasField s "error" a) =>
   Lens.Family2.LensLike' f s a
 error = Data.ProtoLens.Field.field @"error"
+key ::
+  forall f s a.
+  (Prelude.Functor f, Data.ProtoLens.Field.HasField s "key" a) =>
+  Lens.Family2.LensLike' f s a
+key = Data.ProtoLens.Field.field @"key"
 platform ::
   forall f s a.
   (Prelude.Functor f,
@@ -69,6 +79,11 @@ userId ::
   (Prelude.Functor f, Data.ProtoLens.Field.HasField s "userId" a) =>
   Lens.Family2.LensLike' f s a
 userId = Data.ProtoLens.Field.field @"userId"
+value ::
+  forall f s a.
+  (Prelude.Functor f, Data.ProtoLens.Field.HasField s "value" a) =>
+  Lens.Family2.LensLike' f s a
+value = Data.ProtoLens.Field.field @"value"
 vec'devices ::
   forall f s a.
   (Prelude.Functor f,

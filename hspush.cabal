@@ -55,6 +55,7 @@ library
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , containers
     , exceptions
     , grapesy
     , http-conduit
@@ -92,6 +93,7 @@ executable hspush-client
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , containers
     , exceptions
     , grapesy
     , hspush
@@ -130,6 +132,7 @@ executable hspush-server
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , containers
     , exceptions
     , grapesy
     , hspush
@@ -170,6 +173,7 @@ test-suite hspush-test
     , base >=4.7 && <5
     , base64-bytestring
     , bytestring
+    , containers
     , exceptions
     , grapesy
     , hspec
