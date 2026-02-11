@@ -36,7 +36,7 @@ runApp = do
   fileContent <- BL.readFile gsFile
   googleID <- getEnv "HSPUSH_GOOGLE_ID"
 
-  let env = AppEnv conn mkNoopLogger fileContent googleID
+  let env = AppEnv conn mkStdoutLogger fileContent googleID
   let wenv = AppEnv conn mkStdoutLogger fileContent googleID
   race_ (runAppM (runServer port) env) (runAppM runWorker wenv)
 
