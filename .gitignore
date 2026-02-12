@@ -1,3 +1,5 @@
+# Ignore Google OAuth HTTP scratch file
+src/Gates/FCM/google_oauth2.http
 .stack-work/
 *~
 .vscode/tasks.json
