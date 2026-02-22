@@ -3,10 +3,10 @@
 
 module App (runApp, AppM, AppEnv (..)) where
 
-import Cases (processTaskCase, processfakeTaskCase)
+import Cases (processTaskCase)
 import Control.Concurrent (threadDelay)
 import Control.Concurrent.Async (async, race_, wait)
-import Control.Exception (SomeException, catch)
+import Control.Exception (SomeException, catch, throwIO)
 import Control.Monad (forever)
 import Control.Monad.Reader (ReaderT, ask, asks, liftIO, runReaderT)
 import qualified Data.ByteString.Lazy as BL
@@ -22,6 +22,8 @@ import Network.GRPC.Server.StreamType
 import System.Environment (getEnv, lookupEnv)
 import Types
 import Network.Socket (PortNumber)
+import Gates.FCM.Oauth (mkOauthTokenProvider)
+import Gates.FCM.Push (mkPusher)
 
 
 runApp :: IO ()
@@ -35,12 +37,15 @@ runApp = do
   putStrLn gsFile
   fileContent <- BL.readFile gsFile
   googleID <- getEnv "HSPUSH_GOOGLE_ID"
+  googleAuthProvider <- mkOauthTokenProvider fileContent
+  case googleAuthProvider of 
+    Left err -> error $ "failed to create google oauth " ++ err
+    Right provider -> do 
+      let env = AppEnv conn mkStdoutLogger
+      let wenv = WorkerEnv (mkPusher provider googleID) env
+      race_ (runAppM (runServer port) env) (runAppM runWorker wenv)
 
-  let env = AppEnv conn mkStdoutLogger fileContent googleID
-  let wenv = AppEnv conn mkStdoutLogger fileContent googleID
-  race_ (runAppM (runServer port) env) (runAppM runWorker wenv)
-
-runServer :: PortNumber ->  AppM ()
+runServer :: PortNumber ->  AppM AppEnv ()
 runServer port = do
   env <- ask
   log <- asks logger
@@ -66,10 +71,9 @@ logExceptions log h unmask req resp = h unmask req resp `catch` handler
       logError log "caught exception" [(LogField "exception" e)]
       return ()
 
-runWorker :: AppM ()
+runWorker ::  AppM WorkerEnv ()
 runWorker = do
-  log <- asks logger
-  env <- ask
+  log <- asks getLogger
   liftIO $ logInfo log "worker is starting" []
   forever $ do
     liftIO $ logInfo log "worker processing" []

@@ -9,7 +9,7 @@ import MyLogger (mkNoopLogger)
 import qualified Data.ByteString.Lazy as BS
 import Domain (Device(Device), UserID (UserID), DevicePlatform (Ios), Push (..))
 import qualified Data.Text as T
-import Mocks.FCM (mockSendPush)
+import Mocks.FCM (mkMockPush)
 
 
 
@@ -17,11 +17,11 @@ spec :: Spec
 spec = describe "use cases" $ do 
   it "add device" $ do 
     conn <- liftIO $  mkDB ":memory:"
-    let env = AppEnv conn mkNoopLogger BS.empty "test"
+    let env = AppEnv conn mkNoopLogger
     runAppM (addDeviceCase (Device (UserID "1") "a" Ios) ) env
   it "should add device and get it back" $ do 
     conn <- liftIO $  mkDB ":memory:"
-    let env = AppEnv conn mkNoopLogger BS.empty "test"
+    let env = AppEnv conn mkNoopLogger
     res <- runAppM ( do
       addDeviceCase (Device (UserID "1") "b" Ios)
       getDeviceCase (UserID "1") 
@@ -29,7 +29,7 @@ spec = describe "use cases" $ do
     (length res) `shouldBe` 1
   it "should add  2 devices and get them back" $ do 
     conn <- liftIO $  mkDB ":memory:"
-    let env = AppEnv conn mkNoopLogger BS.empty "test"
+    let env = AppEnv conn mkNoopLogger
     res <- runAppM ( do
       addDeviceCase (Device (UserID "1") "a" Ios)
       addDeviceCase (Device (UserID "1") "b" Ios)
@@ -38,14 +38,14 @@ spec = describe "use cases" $ do
     (length res) `shouldBe` 2
   it "add tasks" $ do 
     conn <- liftIO $  mkDB ":memory:"
-    let env = AppEnv conn mkNoopLogger BS.empty "test"
+    let env = AppEnv conn mkNoopLogger 
     runAppM ( do
       addDeviceCase (Device (UserID "1") "a" Ios)
       sendPushCase (UserID "1") (Push "" (T.pack "test") (T.pack "value") [])
       ) env
   it "process task" $ do 
     conn <- liftIO $  mkDB ":memory:"
-    let env = AppEnv conn mkNoopLogger BS.empty "test"
+    let env = WorkerEnv mkMockPush (AppEnv conn mkNoopLogger )
     res <- runAppM ( do
       addDeviceCase (Device (UserID "1") "a" Ios)
       sendPushCase (UserID "1") (Push "" (T.pack "test") (T.pack "value") [])
@@ -54,7 +54,7 @@ spec = describe "use cases" $ do
     res `shouldBe` 1
   it "add push with data" $ do 
     conn <- liftIO $ mkDB ":memory:"
-    let env = AppEnv conn mkNoopLogger BS.empty "test"
+    let env = WorkerEnv mkMockPush (AppEnv conn mkNoopLogger )
     _ <- runAppM ( do 
       addDeviceCase (Device (UserID "1") "a" Ios)
       sendPushCase (UserID "1") push 

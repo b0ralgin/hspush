@@ -1,25 +1,39 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE InstanceSigs #-}
-module Gates.FCM.Push (sendPushFCM)  where
+{-# OPTIONS_GHC -Wno-orphans #-}
+module Gates.FCM.Push (
+  mkPusher,
+) where 
 
-import Gates.FCM.Oauth (getJWTToken, OauthError(ParseError, NetworkError, InvalidToken), JWT(..))
 import qualified Data.Text as T
-import Types (AppM, AppEnv (googleID), PushMonad(..), PushError(..))
-import Network.HTTP.Client.Conduit (parseRequest)
+import Types (AppM,PushError(..), TokenProviderError (..), TokenProvider (fetchToken), Pusher (..), JWT (..))
 import Text.Printf (printf)
-import Control.Monad.Reader (asks, liftIO)
-import Data.Aeson (object, ToJSON (toJSON), (.=), decode, encode)
-import Network.HTTP.Simple (setRequestMethod, setRequestBodyJSON, httpJSONEither, getResponseStatusCode, httpNoBody, setRequestBearerAuth)
-import Data.ByteString.Char8 as BS hiding (putStrLn)
-import Domain (Push(..), PushData)
+import Data.Aeson (object, ToJSON (toJSON), (.=))
+import Network.HTTP.Simple (setRequestMethod, setRequestBodyJSON, httpJSONEither, getResponseStatusCode, httpNoBody, setRequestBearerAuth, Request, Response)
+import Data.ByteString.Char8 (pack)
+import Domain (Push(..))
 import Data.Map
+import Prelude hiding (null)
+import Network.HTTP.Simple (parseRequest_)
 
-
-instance PushMonad AppM where 
-    sendPush = sendPushFCM
+mkPusher :: TokenProvider -> String  ->  Pusher 
+mkPusher  tokenProvider projectID= Pusher {
+    send = (\push -> do 
+      token <- fetchToken tokenProvider
+      case token of 
+        Left err -> do
+            case err of 
+              ParseError perr -> return $ Just (PushError  perr)  
+              NetworkError code -> return $ Just $ PushError  "network err" 
+              InvalidToken -> return $ Just $ PushError "invalid token"
+        Right t -> 
+          sendPushFCM t projectID push 
+          -- TODO: add force updating token and trying one more time 
+    )   
+  }
 
 pushURL :: String  -> String 
-pushURL projectID = printf "https://fcm.googleapis.com/v1/projects/%s/messages:send" projectID
+pushURL = printf "https://fcm.googleapis.com/v1/projects/%s/messages:send"
 
 
 data PushRequest = PushRequest {
@@ -35,36 +49,32 @@ instance ToJSON PushRequest where
     object ["message" .= object ["token" .= token, "notification" .= notification]]
     where notification = 
               object $ ["title" .= title, "body" .= body] <> maybe [] (\d -> ["data" .= d]) data'
-sendPushFCM :: Push-> AppM (Maybe PushError)
-sendPushFCM  (Push deviceID title body data') = do
-  token <- getJWTToken 
-  projectID <- asks googleID
-  case token of 
-    Left err -> do
-        case err of 
-          ParseError perr -> return $ Just (PushError "token" perr)  
-          NetworkError code -> return $ Just $ getNetworkErr "token" code 
-          InvalidToken -> return $ Just $ InvalidTokenErr
-    Right (JWT t) -> do
-      initReq <- parseRequest $ pushURL projectID
-      let request = 
-            setRequestMethod "POST" $
-            setRequestBearerAuth (BS.pack t) $ 
-              setRequestBodyJSON (PushRequest deviceID title body (mapData data') ) 
-                initReq
-      result <- httpNoBody request
+
+sendPushFCM :: JWT -> String ->  Push-> IO (Maybe PushError)
+sendPushFCM  token projectID (Push deviceID title body data') = do
+      let req =   mkRequest 
+            (pushURL projectID) 
+            token 
+            (PushRequest deviceID title body (mapData data')) 
+      result <- httpNoBody req
       case getResponseStatusCode result of 
         200 -> return $ Nothing
         201 -> return $ Nothing
-        code -> return $ Just $ getNetworkErr "push" code 
-      return Nothing
+        401 -> return $ Just $ AuthorizaionError 
+        code -> return $ Just $ getNetworkErr code 
   where 
-    getNetworkErr from  500 = PushError from "internal error"
-    getNetworkErr from 400 = PushError from "bad request"
-    getNetworkErr from code = PushError from $ "http code" ++ show code 
-    mapData d = 
-      if (Prelude.length d) >0 then 
-        Just ((fromList data'))
+    getNetworkErr   500 = PushError "internal error"
+    getNetworkErr  400 = PushError "bad request"
+    getNetworkErr  code = PushError $ "http code" ++ show code 
+    mapData m = 
+      if length  m >0 then 
+        Just (fromList m)
       else 
         Nothing
-
+    mkRequest url (JWT token) pr =
+        let initReq = parseRequest_ $ url 
+        in
+        setRequestMethod "POST" $
+          setRequestBearerAuth (pack token) $ 
+            setRequestBodyJSON pr 
+              initReq

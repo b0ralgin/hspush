@@ -157,6 +157,7 @@ test-suite hspush-test
   other-modules:
       Cases.CasesSpec
       Mocks.FCM
+      PushSpec
       Paths_hspush
   autogen-modules:
       Paths_hspush

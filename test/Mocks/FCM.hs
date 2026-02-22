@@ -1,14 +1,12 @@
 module Mocks.FCM (
-  mockSendPush
+  mkMockPush
 ) where 
 
-import Types(PushMonad(sendPush), PushError, AppM)
+import Types(PushError, AppM, Pusher(..))
 import Domain(Push(..), PushData)
 import qualified Data.Text as T 
 
-instance PushMonad AppM where 
-    sendPush = mockSendPush
-
-mockSendPush ::  Push -> AppM (Maybe PushError)
-mockSendPush _ = return Nothing
-
+mkMockPush :: Pusher
+mkMockPush = Pusher {
+  send = \_  -> return Nothing
+}

@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Gates.FCM.Oauth (getJWTToken, OauthError(..), JWT(..)) where 
+module Gates.FCM.Oauth (mkOauthTokenProvider) where 
 
 import Codec.Crypto.RSA.Pure
 import Control.Monad (unless)
@@ -10,6 +10,7 @@ import qualified Data.ByteString as B
 import Data.ByteString.Base64.URL (encode)
 import Data.ByteString.Char8 (unpack)
 import Data.ByteString.Lazy (fromStrict, toStrict)
+import qualified Data.ByteString.Lazy as BL
 import Data.Maybe (fromJust, fromMaybe)
 import Data.Text.Encoding (encodeUtf8)
 import Data.UnixTime (getUnixTime, utSeconds)
@@ -18,9 +19,41 @@ import Network.HTTP.Simple (parseRequest, setRequestBodyURLEncoded, setRequestMe
 import OpenSSL.EVP.PKey (toKeyPair)
 import OpenSSL.PEM (PemPasswordSupply (PwNone), readPrivateKey)
 import OpenSSL.RSA
-import Types (AppEnv (googleSecrets), AppM)
 import qualified Data.Text as T
+import Types (TokenProvider (..), JWT (JWT), TokenProviderError(..), isValid)
+import Data.Time (UTCTime, getCurrentTime)
+import Data.IORef (newIORef, readIORef, writeIORef)
 
+data TokenCache = TokenCache {
+  token :: JWT,
+  expiredAt :: UTCTime
+}
+
+mkOauthTokenProvider ::  BL.ByteString -> IO (Either String TokenProvider) 
+mkOauthTokenProvider secrets = do
+
+  result <- getSignedToken  secrets
+  case result of 
+    Left err -> return $ Left err  
+    Right signedToken -> do 
+      currentTime <- getCurrentTime 
+      cacheRef <- newIORef (TokenCache  (JWT "")  currentTime)
+      return $ Right $ TokenProvider {
+        fetchToken = ( do 
+          (TokenCache token' expiredAt') <- readIORef cacheRef
+          currentTime <- getCurrentTime 
+          if not $ isValid token' || expiredAt' < currentTime then 
+            do
+              res <- exchangeToken signedToken
+              case res of 
+                Left err -> return $ Left $ err
+                Right token' -> do
+                  writeIORef cacheRef (TokenCache token' currentTime)
+                  return $ Right $ token'
+          else 
+            return $ Right token'
+    )
+}
 data GoogleSecret = GoogleSecret
   { privateKey :: T.Text,
     fileType :: T.Text,
@@ -112,18 +145,16 @@ tokenURL :: String
 tokenURL = "https://oauth2.googleapis.com/token"
 
 data OauthResponse = OauthResponse {
-  accessToken :: T.Text
+  accessToken :: T.Text,
+  expiresIn :: Int 
 }
-
-newtype JWT = JWT String deriving Show 
 
 instance FromJSON OauthResponse where 
   parseJSON = withObject "oauth_response" $ \t -> 
-    OauthResponse <$> (t .: "access_token")
+    OauthResponse <$> (t .: "access_token") <*> (t .: "expires_in")
 
-data OauthError = ParseError String | NetworkError Int | InvalidToken deriving (Show)
 
-exchangeToken :: SignedJWT -> IO (Either OauthError JWT)
+exchangeToken :: SignedJWT -> IO (Either TokenProviderError JWT)
 exchangeToken (SignedJWT tokenBS) = do
   initReq <- parseRequest tokenURL
   let request =
@@ -138,31 +169,27 @@ exchangeToken (SignedJWT tokenBS) = do
             _ <- putStrLn $ show r
             case fromJSON r of
               Error err -> return $ Left $ ParseError $ show err
-              Success (OauthResponse accessToken) -> return $ Right (JWT $ T.unpack accessToken)
+              Success (OauthResponse accessToken expiresIn) -> return $ Right (JWT $ T.unpack accessToken)
     401 -> return $ Left $ InvalidToken
     400 -> do 
        _ <- putStrLn $ show result
        return $ Left $ NetworkError 400  
     code -> return $ Left $ NetworkError code  
 
-getJWTToken :: AppM (Either OauthError JWT)
-getJWTToken = do
-  conf <- asks googleSecrets
-  case decode conf of
-    Nothing -> return $ Left $ ParseError "wrong file"
+getSignedToken :: BL.ByteString ->  IO (Either String SignedJWT)
+getSignedToken secrets = do
+  case decode secrets of
+    Nothing -> return $ Left $  "wrong file"
     Just gs -> do
-      token <- liftIO $ getJWT (clientEmal gs) (T.unpack $ privateKey gs)
-      liftIO $ putStrLn $ show token 
-      result <- liftIO $  exchangeToken token 
-      return $  result
-
-getJWT :: T.Text -> String -> IO SignedJWT
-getJWT serviceAccountEmail pkey = do
-  pkey' <- fromPEMString $ pkey
-  res <- getSignedJWT serviceAccountEmail Nothing [T.pack "https://www.googleapis.com/auth/firebase.messaging"] Nothing pkey'
-  case res of
-    Left e -> error $ "failed to make Signed JWT" ++ e
-    Right r -> return r
+      signedToken <- makeJWT (clientEmal gs) (T.unpack $ privateKey gs)
+      return $ Right $ signedToken
+  where 
+  makeJWT serviceAccountEmail pkey = do
+    pkey' <- fromPEMString $ pkey
+    res <- getSignedJWT serviceAccountEmail Nothing [T.pack "https://www.googleapis.com/auth/firebase.messaging"] Nothing pkey'
+    case res of
+      Left e -> error $ "failed to make Signed JWT" ++ e
+      Right r -> return r
 
 instance FromJSON GoogleSecret where
   parseJSON = withObject "google_secret" $ \t ->
