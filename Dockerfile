@@ -1,7 +1,7 @@
 # Multi-stage build for hspush server
 
-# Build stage (match project GHC via Stack snapshot)
-FROM haskell:9.10 AS builder
+# Dependencies stage (cache stack deps)
+FROM haskell:9.10 AS deps
 
 WORKDIR /app
 
@@ -13,13 +13,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsnappy-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Cache dependency layers
+# Cache dependency layers (only manifests)
 COPY stack.yaml stack.yaml
+COPY stack.yaml.lock stack.yaml.lock
 COPY package.yaml package.yaml
 COPY hspush.cabal hspush.cabal
 
-# Install required GHC for snapshot and build deps
+# Build dependencies only (cached unless manifests change)
 RUN stack build --only-dependencies
+
+# Build stage
+FROM deps AS builder
 
 # Copy source
 COPY . .
@@ -28,13 +32,13 @@ COPY . .
 RUN stack build --copy-bins && \
     ls -la /root/.local/bin
 
-# Runtime stage
-FROM debian:stable-slim
+# Runtime stage (bullseye provides libssl1.1)
+FROM debian:bullseye-slim
 
 # Install runtime deps (openssl, ghc-linked libs, snappy)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
-    libssl-dev \
+    libssl1.1 \
     libtinfo6 \
     libgmp10 \
     zlib1g \
