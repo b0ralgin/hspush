@@ -23,7 +23,7 @@ import qualified Data.Text as T
 import Types (TokenProvider (..), JWT (JWT), TokenProviderError(..), isValid)
 import Data.Time (UTCTime, getCurrentTime, addUTCTime, secondsToNominalDiffTime)
 import Data.IORef (newIORef, readIORef, writeIORef, IORef)
-import Http (Response(responseCode, responseBody),HttpClient(sendJSON))
+import Http (Response(responseCode, responseBody, Response),HttpClient(sendJSON))
 
 data TokenCache = TokenCache {
   token :: JWT,
@@ -166,13 +166,12 @@ exchangeToken (SignedJWT tokenBS) = do
           setRequestBodyURLEncoded [("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer"), ("assertion", tokenBS)] $ initReq
   result <- sendJSON request
   case responseCode result of
-    200 ->
-      case fromJSON (responseBody result) of
-        Error err -> return $ Left $ ParseError $ show err
-        Success (OauthResponse accessToken expiresIn) -> return $ Right ((JWT $ T.unpack accessToken), expiresIn)
+    200 -> do 
+      case responseBody result of 
+        Nothing -> return $ Left InvalidToken 
+        Just (OauthResponse accessToken' expiresIn')  ->  return $ Right ((JWT $ T.unpack accessToken'), expiresIn')
     401 -> return $ Left $ InvalidToken
     400 -> do 
-       _ <- liftIO $ putStrLn $ show result
        return $ Left $ NetworkError 400  
     code -> return $ Left $ NetworkError code  
 

@@ -19,7 +19,7 @@ data Push = Push {
     title :: !T.Text,
     body :: !T.Text,
     data' :: !PushData
-}
+} deriving (Eq, Show)
 
 type PushData = [(String, T.Text)]
 

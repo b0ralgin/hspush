@@ -6,7 +6,7 @@ module Gates.Storage.Sqlite (mkDB) where
 
 import Domain(UserID(..), Device(..), DevicePlatform(..), Push(..), PushData )
 import Control.Monad.IO.Class (liftIO)
-import Database.Sqlite.Easy (withPool, SQLData (..), runWith, run, ConnectionString, createSqlitePool, SQLite)
+import Database.Sqlite.Easy (withPool, SQLData (..), runWith, run, ConnectionString, createSqlitePool, SQLite, transaction)
 import qualified Data.Text  as  T 
 import Types (DB(..))
 import Gates.Storage.Migrations (runMigrations)
@@ -51,7 +51,11 @@ getDeviceDB userid = do
 saveTaskDB :: UserID -> Push ->  SQLite ()
 saveTaskDB (UserID uid) (Push _  titleText bodyText data') = do 
   let jdata = encodeData data'
-  runWith "INSERT INTO tasks (device_id, title, body, data) VALUES (?, ?, ?, ?)" [(SQLText $ T.pack uid), (SQLText titleText), (SQLText bodyText), (SQLBlob jdata)]
+  transaction ( do 
+    result <- runWith "SELECT device_id FROM devices where user_id = ?" [SQLText $ T.pack uid]
+    _ <- mapM (\[SQLText device] -> runWith "INSERT INTO tasks (device_id, title, body, data) VALUES (?, ?, ?, ?)" [(SQLText device), (SQLText titleText), (SQLText bodyText), (SQLBlob jdata)]) result
+    return ()
+    )
   return ()
  where encodeData = toStrict . encode
 

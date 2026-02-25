@@ -45,20 +45,22 @@ spec = describe "use cases" $ do
       ) env
   it "process task" $ do 
     conn <- liftIO $  mkDB ":memory:"
-    let env = WorkerEnv mkMockPush (AppEnv conn mkNoopLogger )
+    let  push =  (Push "device" (T.pack "test") (T.pack "value") [])
+    let env = WorkerEnv ( mkMockPush push)  (AppEnv conn mkNoopLogger )
     res <- runAppM ( do
-      addDeviceCase (Device (UserID "1") "a" Ios)
-      sendPushCase (UserID "1") (Push "" (T.pack "test") (T.pack "value") [])
+      addDeviceCase (Device (UserID "1") "device" Ios)
+      sendPushCase (UserID "1") push 
       processTaskCase
       ) env
     res `shouldBe` 1
   it "add push with data" $ do 
     conn <- liftIO $ mkDB ":memory:"
-    let env = WorkerEnv mkMockPush (AppEnv conn mkNoopLogger )
+    let pusher = mkMockPush push
+    let env = WorkerEnv pusher (AppEnv conn mkNoopLogger )
     _ <- runAppM ( do 
-      addDeviceCase (Device (UserID "1") "a" Ios)
-      sendPushCase (UserID "1") push 
+      addDeviceCase (Device (UserID "user") "device" Ios)
+      sendPushCase (UserID "user") push 
       processTaskCase
       ) env
     return ()
-    where push = (Push "1"(T.pack "test") (T.pack "value") [("type", "document"), ("document_id", "1")])
+    where push = (Push "device"(T.pack "test") (T.pack "value") [("type", "document"), ("document_id", "1")])

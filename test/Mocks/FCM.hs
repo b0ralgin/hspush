@@ -6,7 +6,14 @@ import Types(PushError, AppM, Pusher(..))
 import Domain(Push(..), PushData)
 import qualified Data.Text as T 
 
-mkMockPush :: Pusher
-mkMockPush = Pusher {
-  send = \_  -> return Nothing
+
+
+mkMockPush :: Push ->  Pusher
+mkMockPush expected = Pusher {
+  send = \actual  -> 
+    if expected /= actual then 
+      error $ "wrong push request. Expected:" ++ show expected ++ ". Actual:" ++ show actual
+    else 
+      return Nothing
 }
+

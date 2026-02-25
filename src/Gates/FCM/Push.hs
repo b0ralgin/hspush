@@ -8,13 +8,14 @@ module Gates.FCM.Push (
 import qualified Data.Text as T
 import Types (AppM,PushError(..), TokenProviderError (..), TokenProvider (fetchToken), Pusher (..), JWT (..))
 import Text.Printf (printf)
-import Data.Aeson (object, ToJSON (toJSON), (.=))
-import Network.HTTP.Simple (setRequestMethod, setRequestBodyJSON, httpJSONEither, getResponseStatusCode, httpNoBody, setRequestBearerAuth, Request, Response)
+import Data.Aeson (object, ToJSON (toJSON), (.=), encode)
+import Network.HTTP.Simple (setRequestMethod, setRequestBodyJSON, httpJSONEither, getResponseStatusCode, httpNoBody, setRequestBearerAuth, Request, Response, getResponseBody)
 import Data.ByteString.Char8 (pack)
 import Domain (Push(..))
 import Data.Map
 import Prelude hiding (null)
-import Network.HTTP.Simple (parseRequest_, httpJSON)
+import Network.HTTP.Simple (parseRequest_, httpJSON, httpBS)
+import Data.Text.Encoding (encodeUtf8)
 
 mkPusher :: TokenProvider IO -> String  ->  Pusher 
 mkPusher  tokenProvider projectID= Pusher {
@@ -52,21 +53,23 @@ instance ToJSON PushRequest where
 
 sendPushFCM :: JWT -> String ->  Push-> IO (Maybe PushError)
 sendPushFCM  token projectID (Push deviceID title body data') = do
-      _ <- putStrLn $ show token
       let req =   mkRequest 
             (pushURL projectID) 
             token 
             (PushRequest deviceID title body (mapData data')) 
-      result <- httpNoBody req
-      _ <- putStrLn $ show result
+      result <- httpBS req
       case getResponseStatusCode result of 
         200 -> return $ Nothing
         201 -> return $ Nothing
-        401 -> return $ Just $ AuthorizaionError 
+        401 -> do 
+          _ <- putStrLn $ "auth error" ++  show (getResponseBody result)
+          return $ Just $ AuthorizaionError 
+        400 -> do 
+          _ <- putStrLn $ "bad request error" ++  show (getResponseBody result)
+          return $ Just $ PushError "bad request" 
         code -> return $ Just $ getNetworkErr code 
   where 
     getNetworkErr   500 = PushError "internal error"
-    getNetworkErr  400 = PushError "bad request"
     getNetworkErr  code = PushError $ "http code" ++ show code 
     mapData m = 
       if length  m >0 then 
@@ -77,6 +80,6 @@ sendPushFCM  token projectID (Push deviceID title body data') = do
         let initReq = parseRequest_ $ url 
         in
         setRequestMethod "POST" $
-          setRequestBearerAuth (pack token) $ 
+          setRequestBearerAuth ((encodeUtf8 . T.pack) token) $ 
             setRequestBodyJSON pr 
               initReq

@@ -1,4 +1,4 @@
-module PushSpec (spec) where
+module FCM.PushSpec (spec) where
 
 import Test.Hspec
 import Domain(Push(..))
