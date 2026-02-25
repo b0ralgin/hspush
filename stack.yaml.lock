@@ -95,6 +95,13 @@ packages:
       size: 600
   original:
     hackage: sqlite-easy-1.1.1.0
+- completed:
+    hackage: mock-time-0.1.1@sha256:64eddbcb5c9898dde2fedeb6477d7a12c9ce927cd40256c5291bf2e142fbb5f4,1813
+    pantry-tree:
+      sha256: fd77f8fd7f0171d74c785d0bdcca89d45734812521066b7b11e129dfa3111509
+      size: 599
+  original:
+    hackage: mock-time-0.1.1
 snapshots:
 - completed:
     sha256: c320c36b8a392602c9076bdd0c656e12dcab30f294105a50c3f8ef963c4c3a0d

@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE InstanceSigs #-}
 module Types (
   AppEnv(..),
   WorkerEnv(..),
@@ -19,8 +20,10 @@ import MyLogger (Logger)
 import Control.Monad.Reader (ReaderT (runReaderT), MonadIO, MonadReader)
 import Domain (Device, UserID, Push)
 import Control.Monad.Catch (MonadThrow, MonadCatch)
+import Http (HttpClient (..), Response (Response))
+import Network.HTTP.Simple (httpJSON, getResponseStatusCode, getResponseHeaders, getResponseBody, httpNoBody, httpLBS)
 
-newtype JWT = JWT String deriving Show 
+newtype JWT = JWT String deriving (Show, Eq)
 
 isValid :: JWT -> Bool 
 isValid (JWT token) = 
@@ -72,6 +75,21 @@ data Pusher = Pusher {
   send :: Push -> IO (Maybe PushError)
 }
 
-data TokenProvider = TokenProvider {
-  fetchToken :: IO (Either TokenProviderError JWT)
+data TokenProvider m = TokenProvider {
+  fetchToken :: m (Either TokenProviderError JWT)
 }
+
+
+instance HttpClient IO  where 
+  sendJSON = (\req -> do 
+    res <- httpJSON req 
+    return (Response (getResponseStatusCode res) (getResponseHeaders res) (getResponseBody res)) 
+    )
+  sendNoBody = (\req -> do
+      res <- httpNoBody req 
+      return (Response (getResponseStatusCode res) (getResponseHeaders res) ()) 
+    )
+  sendLBS = (\req -> do
+    res <- httpLBS req 
+    return (Response (getResponseStatusCode res) (getResponseHeaders res) (getResponseBody res))
+    )

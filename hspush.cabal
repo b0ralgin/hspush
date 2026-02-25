@@ -36,6 +36,7 @@ library
       Gates.Grpc.Server
       Gates.Storage.Migrations
       Gates.Storage.Sqlite
+      Http
       MyLogger
       Types
   other-modules:
@@ -71,6 +72,7 @@ library
     , text
     , time
     , unix-time
+    , utf8-string
   default-language: Haskell2010
 
 executable hspush-client
@@ -110,6 +112,7 @@ executable hspush-client
     , text
     , time
     , unix-time
+    , utf8-string
   default-language: Haskell2010
 
 executable hspush-server
@@ -149,6 +152,7 @@ executable hspush-server
     , text
     , time
     , unix-time
+    , utf8-string
   default-language: Haskell2010
 
 test-suite hspush-test
@@ -156,7 +160,9 @@ test-suite hspush-test
   main-is: Spec.hs
   other-modules:
       Cases.CasesSpec
+      FCM.TokenProviderSpec
       Mocks.FCM
+      Mocks.Http
       PushSpec
       Paths_hspush
   autogen-modules:
@@ -183,6 +189,7 @@ test-suite hspush-test
     , http-conduit
     , jwt
     , lens >=5.0
+    , mock-time
     , mtl
     , network
     , proto-lens
@@ -193,4 +200,5 @@ test-suite hspush-test
     , text
     , time
     , unix-time
+    , utf8-string
   default-language: Haskell2010

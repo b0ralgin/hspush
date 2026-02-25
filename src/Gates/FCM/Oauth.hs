@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Gates.FCM.Oauth (mkOauthTokenProvider) where 
+module Gates.FCM.Oauth (mkCacheTokenProvider, getSignedToken, SignedJWT(..)) where 
 
 import Codec.Crypto.RSA.Pure
 import Control.Monad (unless)
-import Control.Monad.Reader (MonadIO (liftIO), asks, liftIO)
+import Control.Monad.Reader ( asks, liftIO, MonadIO)
 import Data.Aeson (FromJSON(..), decode, (.:), fromJSON, Result(..))
 import Data.Aeson.Types (withObject)
 import qualified Data.ByteString as B
@@ -21,39 +21,43 @@ import OpenSSL.PEM (PemPasswordSupply (PwNone), readPrivateKey)
 import OpenSSL.RSA
 import qualified Data.Text as T
 import Types (TokenProvider (..), JWT (JWT), TokenProviderError(..), isValid)
-import Data.Time (UTCTime, getCurrentTime)
-import Data.IORef (newIORef, readIORef, writeIORef)
+import Data.Time (UTCTime, getCurrentTime, addUTCTime, secondsToNominalDiffTime)
+import Data.IORef (newIORef, readIORef, writeIORef, IORef)
+import Http (Response(responseCode, responseBody),HttpClient(sendJSON))
 
 data TokenCache = TokenCache {
   token :: JWT,
   expiredAt :: UTCTime
 }
 
-mkOauthTokenProvider ::  BL.ByteString -> IO (Either String TokenProvider) 
-mkOauthTokenProvider secrets = do
-
-  result <- getSignedToken  secrets
-  case result of 
-    Left err -> return $ Left err  
-    Right signedToken -> do 
+mkCacheTokenProvider :: (HttpClient m, MonadIO m) =>   SignedJWT -> IO (TokenProvider m)
+mkCacheTokenProvider signedToken = do
       currentTime <- getCurrentTime 
-      cacheRef <- newIORef (TokenCache  (JWT "")  currentTime)
-      return $ Right $ TokenProvider {
-        fetchToken = ( do 
-          (TokenCache token' expiredAt') <- readIORef cacheRef
-          currentTime <- getCurrentTime 
-          if not $ isValid token' || expiredAt' < currentTime then 
-            do
-              res <- exchangeToken signedToken
-              case res of 
-                Left err -> return $ Left $ err
-                Right token' -> do
-                  writeIORef cacheRef (TokenCache token' currentTime)
-                  return $ Right $ token'
-          else 
-            return $ Right token'
-    )
+      cacheRef <- liftIO $ newIORef (TokenCache  (JWT "")  currentTime)
+      return TokenProvider {
+        fetchToken = cacheToken signedToken cacheRef
 }
+
+cacheToken :: (HttpClient m, MonadIO m) => SignedJWT -> IORef TokenCache -> m (Either TokenProviderError JWT)
+cacheToken self cacheRef = do
+    (TokenCache token' expiredAt') <- liftIO $  readIORef cacheRef
+    currentTime <- liftIO $ getCurrentTime 
+    _ <- liftIO $ putStrLn $ show (not $ isValid token', expiredAt' <= currentTime)
+    if not (isValid token') || expiredAt' <= currentTime then 
+      do
+        res <- exchangeToken self
+        liftIO $ putStrLn $ show res
+        case res of 
+          Left err -> return $ Left $ err
+          Right (token', expiresIn) -> do
+            liftIO $ writeIORef cacheRef (TokenCache token' $ addUTCTime (secondsToNominalDiffTime (fromIntegral expiresIn)) currentTime)
+            return $ Right $ token'
+    else 
+      if not $ isValid token' then 
+        return $ Left InvalidToken
+      else 
+        return $ Right token'
+
 data GoogleSecret = GoogleSecret
   { privateKey :: T.Text,
     fileType :: T.Text,
@@ -154,25 +158,21 @@ instance FromJSON OauthResponse where
     OauthResponse <$> (t .: "access_token") <*> (t .: "expires_in")
 
 
-exchangeToken :: SignedJWT -> IO (Either TokenProviderError JWT)
+exchangeToken :: (HttpClient m, MonadIO m) => SignedJWT -> m (Either TokenProviderError (JWT,Int))
 exchangeToken (SignedJWT tokenBS) = do
-  initReq <- parseRequest tokenURL
+  initReq <- liftIO $ parseRequest tokenURL
   let request =
         setRequestMethod "POST" $
           setRequestBodyURLEncoded [("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer"), ("assertion", tokenBS)] $ initReq
-  result <- httpJSONEither request
-  case getResponseStatusCode result of
+  result <- sendJSON request
+  case responseCode result of
     200 ->
-       case getResponseBody result of
-        Left err -> return $ Left $ ParseError $ show err
-        Right r -> do
-            _ <- putStrLn $ show r
-            case fromJSON r of
-              Error err -> return $ Left $ ParseError $ show err
-              Success (OauthResponse accessToken expiresIn) -> return $ Right (JWT $ T.unpack accessToken)
+      case fromJSON (responseBody result) of
+        Error err -> return $ Left $ ParseError $ show err
+        Success (OauthResponse accessToken expiresIn) -> return $ Right ((JWT $ T.unpack accessToken), expiresIn)
     401 -> return $ Left $ InvalidToken
     400 -> do 
-       _ <- putStrLn $ show result
+       _ <- liftIO $ putStrLn $ show result
        return $ Left $ NetworkError 400  
     code -> return $ Left $ NetworkError code  
 

@@ -43,7 +43,7 @@ dependencies:
 - network
 - exceptions
 - containers
-
+- utf8-string
 default-extensions:
   DataKinds
   OverloadedLabels
@@ -98,3 +98,4 @@ tests:
     - hspush
     - hspec
     - hspec-discover
+    - mock-time

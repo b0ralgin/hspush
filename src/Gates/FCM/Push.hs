@@ -14,9 +14,9 @@ import Data.ByteString.Char8 (pack)
 import Domain (Push(..))
 import Data.Map
 import Prelude hiding (null)
-import Network.HTTP.Simple (parseRequest_)
+import Network.HTTP.Simple (parseRequest_, httpJSON)
 
-mkPusher :: TokenProvider -> String  ->  Pusher 
+mkPusher :: TokenProvider IO -> String  ->  Pusher 
 mkPusher  tokenProvider projectID= Pusher {
     send = (\push -> do 
       token <- fetchToken tokenProvider
@@ -52,11 +52,13 @@ instance ToJSON PushRequest where
 
 sendPushFCM :: JWT -> String ->  Push-> IO (Maybe PushError)
 sendPushFCM  token projectID (Push deviceID title body data') = do
+      _ <- putStrLn $ show token
       let req =   mkRequest 
             (pushURL projectID) 
             token 
             (PushRequest deviceID title body (mapData data')) 
       result <- httpNoBody req
+      _ <- putStrLn $ show result
       case getResponseStatusCode result of 
         200 -> return $ Nothing
         201 -> return $ Nothing

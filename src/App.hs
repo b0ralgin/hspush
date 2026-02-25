@@ -22,7 +22,7 @@ import Network.GRPC.Server.StreamType
 import System.Environment (getEnv, lookupEnv)
 import Types
 import Network.Socket (PortNumber)
-import Gates.FCM.Oauth (mkOauthTokenProvider)
+import Gates.FCM.Oauth (mkCacheTokenProvider, getSignedToken)
 import Gates.FCM.Push (mkPusher)
 
 
@@ -37,13 +37,14 @@ runApp = do
   putStrLn gsFile
   fileContent <- BL.readFile gsFile
   googleID <- getEnv "HSPUSH_GOOGLE_ID"
-  googleAuthProvider <- mkOauthTokenProvider fileContent
-  case googleAuthProvider of 
-    Left err -> error $ "failed to create google oauth " ++ err
-    Right provider -> do 
-      let env = AppEnv conn mkStdoutLogger
-      let wenv = WorkerEnv (mkPusher provider googleID) env
-      race_ (runAppM (runServer port) env) (runAppM runWorker wenv)
+  result <- getSignedToken  fileContent
+  secrets <- case result of 
+    Left err -> error $ "failed to create signed token " ++ err
+    Right signedToken -> return signedToken
+  googleAuthProvider <- mkCacheTokenProvider secrets
+  let env = AppEnv conn mkStdoutLogger
+  let wenv = WorkerEnv (mkPusher googleAuthProvider googleID) env
+  race_ (runAppM (runServer port) env) (runAppM runWorker wenv)
 
 runServer :: PortNumber ->  AppM AppEnv ()
 runServer port = do
@@ -80,3 +81,5 @@ runWorker = do
     count <- processTaskCase
     liftIO $ logInfo log "worker is done" [(LogField "amount of processed events" count)]
     liftIO $ threadDelay (1000000)
+
+
